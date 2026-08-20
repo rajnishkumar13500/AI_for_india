@@ -1,0 +1,25 @@
+{
+  "name": "ai-for-india",
+  "version": "1.0.0",
+  "description": "Paytm Commerce Intelligence - AI-Native Merchant Intelligence Platform",
+  "private": true,
+  "workspaces": [
+    "server",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:server": "npm --prefix server run dev",
+    "seed": "npm --prefix server run seed",
+    "test:api": "npm --prefix server run test:api"
+  },
+  "keywords": [
+    "paytm",
+    "commerce-intelligence",
+    "sarvam-ai",
+    "soundbox",
+    "merchant-copilot",
+    "vyapar-ai"
+  ],
+  "author": "Rajnish",
+  "license": "MIT"
+}
