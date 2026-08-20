@@ -1,0 +1,509 @@
+{
+  "info": {
+    "name": "Paytm Commerce Intelligence API",
+    "_postman_id": "c73098db-paytm-vyapar-ai-collection",
+    "description": "Comprehensive Postman collection for testing Paytm Commerce Intelligence / Paytm Vyapar AI backend APIs.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "sessionId",
+      "value": "SESSION-TEST-001",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "1. Master Data",
+      "item": [
+        {
+          "name": "Get Merchant Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/merchant",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "merchant"]
+            }
+          }
+        },
+        {
+          "name": "Get All Products (50 items)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products"]
+            }
+          }
+        },
+        {
+          "name": "Get All Customers (100 items)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/customers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "customers"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Transaction Sessions & Audio",
+      "item": [
+        {
+          "name": "Start Transaction Session",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.id) {",
+                  "    pm.collectionVariables.set('sessionId', jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"merchantId\": \"M001\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions/start",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sessions", "start"]
+            }
+          }
+        },
+        {
+          "name": "Submit Counter Transcript (Scenario 1: 2 Maggi + 1 Coke)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transcript\": \"Bhaiya 2 Maggi aur ek Coke dena. Kitna hua? Assi rupaye.\",\n  \"language\": \"hi\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions/{{sessionId}}/transcript",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sessions", "{{sessionId}}", "transcript"]
+            }
+          }
+        },
+        {
+          "name": "Get Session Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions/{{sessionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sessions", "{{sessionId}}"]
+            }
+          }
+        },
+        {
+          "name": "List All Sessions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sessions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sessions"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Payment Simulator",
+      "item": [
+        {
+          "name": "Simulate Payment (₹80)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 80,\n  \"merchantId\": \"M001\",\n  \"sessionId\": \"{{sessionId}}\",\n  \"method\": \"QR\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/simulate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "payments", "simulate"]
+            }
+          }
+        },
+        {
+          "name": "List Recent Payments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/payments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "payments"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Transactions",
+      "item": [
+        {
+          "name": "List Recent Transactions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions?merchantId=M001&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transactions"],
+              "query": [
+                {
+                  "key": "merchantId",
+                  "value": "M001"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Analytics & Business Intelligence",
+      "item": [
+        {
+          "name": "Get Daily Overview KPIs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/analytics/overview",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "analytics", "overview"]
+            }
+          }
+        },
+        {
+          "name": "Get Product Performance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/analytics/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "analytics", "products"]
+            }
+          }
+        },
+        {
+          "name": "Get Product Combinations (Basket Affinity)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/analytics/combinations",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "analytics", "combinations"]
+            }
+          }
+        },
+        {
+          "name": "Get Peak Hours Traffic",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/analytics/peak-hours",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "analytics", "peak-hours"]
+            }
+          }
+        },
+        {
+          "name": "Get Inventory Risks & Runway Forecast",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/analytics/inventory",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "analytics", "inventory"]
+            }
+          }
+        },
+        {
+          "name": "Get Customer Segmentation & Inactive List",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/analytics/customers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "analytics", "customers"]
+            }
+          }
+        },
+        {
+          "name": "Get Lost Sales Signals",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/analytics/lost-sales",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "analytics", "lost-sales"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. AI Business Copilot",
+      "item": [
+        {
+          "name": "Ask AI: Aaj business kaisa raha?",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"merchantId\": \"M001\",\n  \"question\": \"Aaj business kaisa raha?\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/copilot/ask",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "copilot", "ask"]
+            }
+          }
+        },
+        {
+          "name": "Ask AI: Meri sales kyun giri?",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"merchantId\": \"M001\",\n  \"question\": \"Meri sales kyun giri?\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/copilot/ask",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "copilot", "ask"]
+            }
+          }
+        },
+        {
+          "name": "Ask AI: Kal kya stock karu?",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"merchantId\": \"M001\",\n  \"question\": \"Kal kya stock karu?\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/copilot/ask",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "copilot", "ask"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Offers & Promotions",
+      "item": [
+        {
+          "name": "List Offers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/offers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "offers"]
+            }
+          }
+        },
+        {
+          "name": "Prepare Automated Reactivation Offer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"merchantId\": \"M001\",\n  \"title\": \"Weekend Kirana Reactivation ₹20 Off\",\n  \"targetSegment\": \"INACTIVE\",\n  \"discountValue\": 20,\n  \"minOrderValue\": 200\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/offers/prepare",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "offers", "prepare"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Demo Mode & Scenarios",
+      "item": [
+        {
+          "name": "Get 5 Pre-Configured Demo Scenarios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/demo/scenarios",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "demo", "scenarios"]
+            }
+          }
+        },
+        {
+          "name": "Run Scenario 1: Maggi + Coke (₹80 Match)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/demo/run-scenario/scenario_1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "demo", "run-scenario", "scenario_1"]
+            }
+          }
+        },
+        {
+          "name": "Run Scenario 2: Multi-Item (Pepsi + Chips + Choc ₹120)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/demo/run-scenario/scenario_2",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "demo", "run-scenario", "scenario_2"]
+            }
+          }
+        },
+        {
+          "name": "Run Scenario 3: Discrepancy (Confirmation Flagged)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/demo/run-scenario/scenario_3",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "demo", "run-scenario", "scenario_3"]
+            }
+          }
+        },
+        {
+          "name": "Run Scenario 4: Lost Sales Signal",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/demo/run-scenario/scenario_4",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "demo", "run-scenario", "scenario_4"]
+            }
+          }
+        },
+        {
+          "name": "Run Scenario 5: Bread + Milk (₹95 Match)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/demo/run-scenario/scenario_5",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "demo", "run-scenario", "scenario_5"]
+            }
+          }
+        },
+        {
+          "name": "Reset Database to Pristine Demo State",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/demo/reset",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "demo", "reset"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
