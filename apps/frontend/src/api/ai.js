@@ -34,3 +34,65 @@ export async function askCopilot(question) {
   )
 }
 
+/**
+ * Streaming copilot — calls onChunk(text) for each arriving token,
+ * then onDone() when the stream is complete.
+ * source: 'dashboard' (full answer) | 'soundbox' (2-3 sentences, TTS-friendly)
+ */
+export async function askCopilotStream(question, onChunk, onDone, source = 'dashboard') {
+  if (!USE_REAL_API) {
+    // Simulate streaming from mock data
+    const lower = question.toLowerCase()
+    let full = MOCK_RESPONSES.default
+    if (lower.includes('sales') || lower.includes('revenue') || lower.includes('business')) full = MOCK_RESPONSES.sales
+    else if (lower.includes('stock') || lower.includes('inventory') || lower.includes('order')) full = MOCK_RESPONSES.stock
+    else if (lower.includes('offer') || lower.includes('opportunity') || lower.includes('combo')) full = MOCK_RESPONSES.opportunity
+    else if (lower.includes('customer') || lower.includes('inactive')) full = MOCK_RESPONSES.customers
+    // Emit word groups with delay to simulate streaming
+    const words = full.split(' ')
+    for (let i = 0; i < words.length; i += 3) {
+      await new Promise(r => setTimeout(r, 60))
+      onChunk((i === 0 ? '' : ' ') + words.slice(i, i + 3).join(' '))
+    }
+    onDone?.()
+    return
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/copilot/ask/stream`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ merchantId: MERCHANT_ID, question, source }),
+    })
+    if (!res.ok || !res.body) throw new Error(`Stream error: ${res.status}`)
+
+    const reader = res.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() ?? ''
+      for (const line of lines) {
+        const trimmed = line.trim()
+        if (!trimmed.startsWith('data:')) continue
+        const data = trimmed.slice(5).trim()
+        if (data === '[DONE]') { onDone?.(); return }
+        try {
+          const parsed = JSON.parse(data)
+          if (parsed.chunk) onChunk(parsed.chunk)
+        } catch { /* malformed chunk — skip */ }
+      }
+    }
+    onDone?.()
+  } catch (err) {
+    console.error('askCopilotStream failed:', err)
+    // Fallback to full non-streaming request
+    const full = await askCopilot(question).catch(() => 'Kuch gadbad ho gayi.')
+    onChunk(full)
+    onDone?.()
+  }
+}

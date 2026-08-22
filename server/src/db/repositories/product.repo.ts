@@ -49,6 +49,22 @@ export class ProductRepository {
     return product;
   }
 
+  public async create(product: Product): Promise<Product> {
+    db.getState().products.push(product);
+    await db.save();
+    return product;
+  }
+
+  public async restock(id: string, quantityToAdd: number): Promise<Product | null> {
+    const product = db.getState().products.find((p) => p.id === id);
+    if (!product) return null;
+
+    product.stock = (product.stock || 0) + quantityToAdd;
+    product.updatedAt = new Date().toISOString();
+    await db.save();
+    return product;
+  }
+
   public async upsertMany(products: Product[]): Promise<void> {
     const stateProducts = db.getState().products;
     for (const p of products) {

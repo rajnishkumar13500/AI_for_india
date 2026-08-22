@@ -8,49 +8,74 @@ export interface SarvamTranscriptionResult {
 }
 
 export class SarvamSTTClient {
-  private apiKey: string | undefined;
-
-  constructor() {
-    this.apiKey = process.env.SARVAM_API_KEY;
+  private getApiKey(): string | undefined {
+    return process.env.SARVAM_API_KEY || process.env.LLM_API_KEY;
   }
 
   public async transcribeAudio(filePath: string): Promise<SarvamTranscriptionResult> {
+    const apiKey = this.getApiKey();
+    console.log(`[STT DEBUG] transcribeAudio called for: ${filePath}`);
+
     // 1. If API key is available, call Sarvam AI STT
-    if (this.apiKey && this.apiKey.trim().length > 0) {
-      try {
-        const fileBuffer = await fs.promises.readFile(filePath);
-        const fileName = path.basename(filePath);
-        const blob = new Blob([fileBuffer]);
+    if (apiKey && apiKey.trim().length > 0) {
+      // List of supported Sarvam STT models in priority order
+      const modelsToTry = ['saaras:v3', 'saaras:v4', 'saarika:v2.5'];
 
-        const formData = new FormData();
-        formData.append('file', blob, fileName);
-        formData.append('model', 'saaras:v1');
-        formData.append('language_code', 'hi-IN');
-        formData.append('with_diarization', 'false');
+      for (const model of modelsToTry) {
+        try {
+          const fileBuffer = await fs.promises.readFile(filePath);
+          const fileName = path.basename(filePath);
+          const ext = path.extname(filePath).toLowerCase();
+          const mimeType = ext === '.mp3' ? 'audio/mp3' : ext === '.wav' ? 'audio/wav' : ext === '.ogg' ? 'audio/ogg' : 'audio/webm';
 
-        const response = await fetch('https://api.sarvam.ai/speech-to-text', {
-          method: 'POST',
-          headers: {
-            'api-subscription-key': this.apiKey,
-          },
-          body: formData,
-        });
+          console.log(`[STT DEBUG] Attempting Sarvam STT with model '${model}' (file: ${fileName}, size: ${fileBuffer.length} bytes)...`);
 
-        if (response.ok) {
-          const data = (await response.json()) as any;
-          return {
-            transcript: data.transcript || '',
-            language: data.language_code || 'hi',
-            confidence: 0.95,
-          };
-        } else {
-          console.warn(`Sarvam STT API returned ${response.status}. Falling back to demo mode.`);
+          const blob = new Blob([fileBuffer], { type: mimeType });
+          const formData = new FormData();
+          formData.append('file', blob, fileName);
+          formData.append('model', model);
+          formData.append('language_code', 'hi-IN');
+          formData.append('with_diarization', 'false');
+
+          const response = await fetch('https://api.sarvam.ai/speech-to-text', {
+            method: 'POST',
+            headers: {
+              'api-subscription-key': apiKey,
+            },
+            body: formData,
+          });
+
+          console.log(`[STT DEBUG] Sarvam STT (${model}) response status: ${response.status} ${response.statusText}`);
+
+          if (response.ok) {
+            const data = (await response.json()) as any;
+            const transcript = data.transcript || '';
+            const language = data.language_code || 'hi';
+
+            console.log(`[STT DEBUG] Transcribed text: "${transcript}" (language: ${language})`);
+
+            if (transcript.trim().length > 0) {
+              return {
+                transcript: transcript.trim(),
+                language,
+                confidence: 0.95,
+              };
+            } else {
+              console.log(`[STT DEBUG] Empty transcript returned from ${model}, trying next or fallback.`);
+            }
+          } else {
+            const errBody = await response.text().catch(() => '');
+            console.warn(`[STT DEBUG] Sarvam STT (${model}) failed: ${response.status} - ${errBody}`);
+          }
+        } catch (error) {
+          console.error(`[STT DEBUG] Error with model ${model}:`, error);
         }
-      } catch (error) {
-        console.error('Sarvam STT error, falling back:', error);
       }
+    } else {
+      console.warn('[STT DEBUG] No SARVAM_API_KEY found in environment.');
     }
 
+    console.log('[STT DEBUG] Falling back to contextual fallback transcript.');
     // 2. Offline / Demo Fallback Mode
     return this.getFallbackTranscript(filePath);
   }

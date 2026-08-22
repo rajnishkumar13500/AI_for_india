@@ -41,41 +41,58 @@ export default function Offers() {
       )}
 
       <div className="flex flex-col gap-5">
-        {offers.map((offer, i) => (
+        {offers.map((offer, i) => {
+          // Build display values from backend Offer schema
+          const discountLabel = offer.discount ||
+            (offer.discountType === 'FLAT'
+              ? `₹${offer.discountValue} off above ₹${offer.minOrderValue}`
+              : offer.discountType === 'PERCENT'
+              ? `${offer.discountValue}% off`
+              : null)
+          const impactLabel = offer.estimatedImpact ||
+            (offer.targetCount && offer.discountValue
+              ? `~${offer.targetCount} customers targeted`
+              : null)
+          const reason = offer.reason || offer.suggestedReason
+          const targetLabel = typeof offer.targetSegment === 'string'
+            ? offer.targetSegment
+            : offer.targetCount ? `${offer.targetCount} Customers` : null
+
+          return (
           <div key={offer.id || i} className="section-card">
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                   <span className="badge badge-purple"><Tag size={10} /> AI GENERATED</span>
-                  {offer.status && <span className={`badge ${offer.status === 'ACTIVE' ? 'badge-green' : 'badge-gray'}`}>{offer.status}</span>}
+                  {offer.status && <span className={`badge ${offer.status === 'ACTIVE' ? 'badge-green' : offer.status === 'READY' ? 'badge-blue' : 'badge-gray'}`}>{offer.status}</span>}
                 </div>
                 <h3 style={{ marginBottom: 6, color: 'var(--dash-text)' }}>{offer.title || offer.name}</h3>
                 <div style={{ fontSize: '.9rem', color: 'var(--dash-text-2)', marginBottom: 12, lineHeight: 1.6 }}>{offer.description}</div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px,1fr))', gap: 12 }}>
-                  {offer.targetSegment && (
+                  {targetLabel && (
                     <div style={{ padding: '10px 14px', background: 'var(--dash-surface-2)', borderRadius: 'var(--r-md)' }}>
                       <div style={{ fontSize: '.65rem', fontWeight: 700, color: 'var(--dash-text-3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Target</div>
-                      <div style={{ fontWeight: 600, marginTop: 2 }}><Users size={12} style={{ display: 'inline', marginRight: 4 }} />{offer.targetSegment}</div>
+                      <div style={{ fontWeight: 600, marginTop: 2 }}><Users size={12} style={{ display: 'inline', marginRight: 4 }} />{targetLabel}</div>
                     </div>
                   )}
-                  {offer.discount && (
+                  {discountLabel && (
                     <div style={{ padding: '10px 14px', background: 'var(--primary-light)', borderRadius: 'var(--r-md)' }}>
                       <div style={{ fontSize: '.65rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Discount</div>
-                      <div style={{ fontWeight: 700, color: 'var(--primary)', marginTop: 2 }}>{offer.discount}</div>
+                      <div style={{ fontWeight: 700, color: 'var(--primary)', marginTop: 2 }}>{discountLabel}</div>
                     </div>
                   )}
-                  {offer.estimatedImpact && (
+                  {impactLabel && (
                     <div style={{ padding: '10px 14px', background: 'var(--success-bg)', borderRadius: 'var(--r-md)' }}>
                       <div style={{ fontSize: '.65rem', fontWeight: 700, color: 'var(--success)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Est. Impact</div>
-                      <div style={{ fontWeight: 600, color: 'var(--success)', marginTop: 2 }}>{offer.estimatedImpact}</div>
+                      <div style={{ fontWeight: 600, color: 'var(--success)', marginTop: 2 }}>{impactLabel}</div>
                     </div>
                   )}
                 </div>
 
-                {offer.reason && (
+                {reason && (
                   <div style={{ marginTop: 12, padding: '10px 14px', background: 'rgba(0,186,242,.06)', border: '1px solid rgba(0,186,242,.15)', borderRadius: 'var(--r-md)', fontSize: '.83rem', color: 'var(--dash-text-2)' }}>
-                    <strong style={{ color: 'var(--primary)' }}>Why? </strong>{offer.reason}
+                    <strong style={{ color: 'var(--primary)' }}>Why? </strong>{reason}
                   </div>
                 )}
               </div>
@@ -85,7 +102,8 @@ export default function Offers() {
               </button>
             </div>
           </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

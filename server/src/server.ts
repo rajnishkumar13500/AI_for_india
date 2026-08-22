@@ -10,7 +10,9 @@ import { errorHandler } from './middleware/errorHandler.js';
 import { db } from './db/database.js';
 import { seedDatabase } from './scripts/seed.js';
 
-dotenv.config();
+dotenv.config(); // tries current working directory
+dotenv.config({ path: path.resolve(process.cwd(), 'server/.env') });
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

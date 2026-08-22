@@ -25,10 +25,9 @@ export default function Landing() {
       {/* ── TOP NAV — White, exactly like Paytm.com ── */}
       <header className="landing-topnav">
         <div className="landing-topnav-inner">
-          <div className="landing-logo">
-            {/* Paytm wordmark — lowercase, rounded */}
-            <span className="logo-pay">pay</span><span className="logo-tm">tm</span>
-            <span className="logo-divider">|</span>
+          <div className="landing-logo" onClick={() => nav('/')} role="button" tabIndex={0}>
+            <img src="/icon.png" alt="Paytm" className="landing-logo-img" />
+            <span className="logo-divider" aria-hidden="true" />
             <span className="logo-sub">Vyapar AI</span>
           </div>
           <nav className="landing-nav-links">

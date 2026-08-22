@@ -64,37 +64,49 @@ export class TransactionController {
 
       let transaction = await transactionRepo.findById(id);
 
-      if (!transaction && sessionId) {
+      if (!transaction && (sessionId || id)) {
         // Create confirmed transaction from session
-        const session = await sessionRepo.findById(sessionId);
+        const session = await sessionRepo.findById(sessionId || id);
         if (!session) {
           res.status(404).json({ success: false, error: 'Session not found' });
           return;
         }
 
+        const sourceItems = (items && items.length > 0)
+          ? items
+          : (session.reconciliation?.matchedItems || session.extraction?.products || []);
+
         const formattedItems: TransactionItem[] = [];
         let totalCost = 0;
 
-        for (const item of items || []) {
-          const product = await productRepo.findById(item.productId);
-          const costPrice = product ? product.costPrice : Math.round(item.unitPrice * 0.75);
-          const itemTotalCost = costPrice * item.quantity;
-          const totalPrice = item.unitPrice * item.quantity;
+        for (const item of sourceItems) {
+          const product = item.productId && item.productId !== 'UNRESOLVED'
+            ? await productRepo.findById(item.productId)
+            : null;
+          const costPrice = product ? product.costPrice : Math.round((item.unitPrice || 15) * 0.75);
+          const unitPrice = item.unitPrice || product?.sellingPrice || 15;
+          const quantity = item.quantity || 1;
+          const itemTotalCost = costPrice * quantity;
+          const totalPrice = unitPrice * quantity;
 
           formattedItems.push({
-            productId: item.productId,
-            productName: item.productName || product?.name || 'Item',
+            productId: product ? product.id : (item.productId || 'PROD-GEN'),
+            productName: item.productName || item.name || product?.name || 'Item',
             category: product ? product.category : 'General',
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
+            quantity,
+            unitPrice,
             costPrice,
             totalPrice,
             profit: totalPrice - itemTotalCost,
           });
           totalCost += itemTotalCost;
+
+          if (product) {
+            await productRepo.updateStock(product.id, quantity);
+          }
         }
 
-        const amount = totalAmount || session.payment?.amount || 0;
+        const amount = totalAmount || session.payment?.amount || session.reconciliation?.receivedAmount || session.reconciliation?.expectedAmount || 0;
 
         transaction = {
           id: `TXN-${Date.now()}-${uuidv4().substring(0, 4).toUpperCase()}`,
@@ -112,7 +124,7 @@ export class TransactionController {
         };
 
         await transactionRepo.create(transaction);
-        await sessionRepo.update(sessionId, { status: 'COMPLETED' });
+        await sessionRepo.update(session.id, { status: 'COMPLETED' });
       } else if (transaction) {
         transaction = await transactionRepo.update(id, { isConfirmed: true, items, totalAmount });
       }

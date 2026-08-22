@@ -5,6 +5,7 @@ import { transactionRepo } from '../db/repositories/transaction.repo.js';
 import { productRepo } from '../db/repositories/product.repo.js';
 import { sarvamSTT } from '../ai/sarvam.js';
 import { transactionExtractor } from '../ai/extractor.js';
+import { productResolver } from '../context-engine/resolver.js';
 import { reconciler } from '../context-engine/reconciler.js';
 import { socketManager } from '../sockets/socketManager.js';
 import { TransactionSession, Transaction, TransactionItem } from '../types/index.js';
@@ -71,6 +72,10 @@ export class SessionController {
       const id = req.params.id as string;
       const file = req.file;
 
+      console.log(`\n=======================================================`);
+      console.log(`[Session DEBUG] Audio upload request received for session: ${id}`);
+      console.log(`[Session DEBUG] File details:`, file ? { filename: file.filename, originalname: file.originalname, size: file.size, mimetype: file.mimetype } : 'NO FILE');
+
       if (!file) {
         res.status(400).json({ success: false, error: 'No audio file uploaded' });
         return;
@@ -90,11 +95,26 @@ export class SessionController {
       await sessionRepo.update(id, { status: 'PROCESSING', audioPath: file.path });
       socketManager.emitEvent('session:processing', { sessionId: id, status: 'PROCESSING' });
 
-      // 1. Speech to text
+      // 1. Speech to text via Sarvam AI
+      console.log(`[Session DEBUG] Calling Sarvam STT transcribeAudio...`);
       const sttResult = await sarvamSTT.transcribeAudio(file.path);
+      console.log(`[Session DEBUG] STT Result: "${sttResult.transcript}" (language: ${sttResult.language})`);
 
-      // 2. Transaction extraction
+      // 2. Transaction extraction via Sarvam LLM
+      console.log(`[Session DEBUG] Calling TransactionExtractor on transcript...`);
       const extraction = await transactionExtractor.extract(sttResult.transcript, sttResult.language);
+      console.log(`[Session DEBUG] Extraction Result:`, JSON.stringify(extraction, null, 2));
+
+      // Resolve each product against product catalog to get actual sellingPrice and canonical name
+      for (const p of extraction.products) {
+        const resolved = await productResolver.resolve(p.name, session?.merchantId || 'M001');
+        if (resolved.matched && resolved.product) {
+          p.name = resolved.product.name;
+          p.unitPrice = resolved.product.sellingPrice;
+          (p as any).productId = resolved.product.id;
+          (p as any).category = resolved.product.category;
+        }
+      }
 
       // Record lost sales if detected
       if (extraction.isLostSale && extraction.lostSaleProduct) {
@@ -129,8 +149,10 @@ export class SessionController {
         return;
       }
 
+      console.log(`[Session DEBUG] Session ${id} successfully updated with extracted products.\n=======================================================\n`);
       res.json({ success: true, data: updated });
     } catch (err) {
+      console.error('[Session DEBUG] Error in uploadAudio:', err);
       next(err);
     }
   }
@@ -138,9 +160,13 @@ export class SessionController {
   public async submitTranscript(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const id = req.params.id as string;
-      const { transcript, language } = req.body;
+      const { transcript, language = 'hi' } = req.body;
 
-      if (!transcript) {
+      console.log(`\n=======================================================`);
+      console.log(`[Session DEBUG] submitTranscript received for session: ${id}`);
+      console.log(`[Session DEBUG] Transcript: "${transcript}" (language: ${language})`);
+
+      if (!transcript || typeof transcript !== 'string') {
         res.status(400).json({ success: false, error: 'Transcript is required' });
         return;
       }
@@ -156,7 +182,19 @@ export class SessionController {
         await sessionRepo.create(session);
       }
 
-      const extraction = await transactionExtractor.extract(transcript, language || 'hi');
+      const extraction = await transactionExtractor.extract(transcript, language);
+      console.log(`[Session DEBUG] submitTranscript Extraction:`, JSON.stringify(extraction, null, 2));
+
+      // Resolve each product against product catalog to get actual sellingPrice and canonical name
+      for (const p of extraction.products) {
+        const resolved = await productResolver.resolve(p.name, session?.merchantId || 'M001');
+        if (resolved.matched && resolved.product) {
+          p.name = resolved.product.name;
+          p.unitPrice = resolved.product.sellingPrice;
+          (p as any).productId = resolved.product.id;
+          (p as any).category = resolved.product.category;
+        }
+      }
 
       if (extraction.isLostSale && extraction.lostSaleProduct) {
         await lostSalesRepo.recordRequest(extraction.lostSaleProduct);
@@ -169,27 +207,9 @@ export class SessionController {
       });
 
       socketManager.emitEvent('session:extracted', updated, session?.merchantId || 'M001');
-
-      if (updated?.payment) {
-        const reconciliation = await reconciler.reconcile(updated, updated.payment, updated.merchantId);
-        const finalStatus = reconciliation.isMatched ? 'MATCHED' : 'CONFIRMATION_REQUIRED';
-        const finalized = await sessionRepo.update(id, {
-          status: finalStatus,
-          reconciliation,
-          completedAt: new Date().toISOString(),
-        });
-
-        if (reconciliation.isMatched && finalized) {
-          await SessionController.saveFinalTransaction(finalized);
-        }
-
-        socketManager.emitEvent('session:reconciled', finalized, session?.merchantId || 'M001');
-        res.json({ success: true, data: finalized });
-        return;
-      }
-
       res.json({ success: true, data: updated });
     } catch (err) {
+      console.error('[Session DEBUG] Error in submitTranscript:', err);
       next(err);
     }
   }

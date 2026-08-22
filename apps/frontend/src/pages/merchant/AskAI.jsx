@@ -1,7 +1,6 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { Send, Mic, MicOff, Bot } from 'lucide-react'
-import { askCopilot } from '../../api/ai.js'
-import { useAudioRecorder } from '../../hooks/useAudioRecorder.js'
+import { askCopilotStream } from '../../api/ai.js'
 
 const SUGGESTIONS = [
   'Aaj business kaisa raha?',
@@ -16,7 +15,23 @@ function Message({ msg }) {
   return (
     <div className={`askai-msg ${msg.role}`}>
       <div className="askai-avatar">{msg.role === 'user' ? 'R' : <Bot size={16} />}</div>
-      <div className="askai-msg-bubble">{msg.content}</div>
+      <div className="askai-msg-bubble">
+        {msg.content}
+        {/* Blinking cursor while streaming */}
+        {msg.streaming && (
+          <span
+            style={{
+              display: 'inline-block',
+              width: 2,
+              height: '1em',
+              background: 'currentColor',
+              marginLeft: 2,
+              verticalAlign: 'text-bottom',
+              animation: 'askai-cursor-blink 0.7s step-end infinite',
+            }}
+          />
+        )}
+      </div>
     </div>
   )
 }
@@ -24,32 +39,78 @@ function Message({ msg }) {
 export default function AskAI() {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false)   // true only until first chunk
+  const [isRecording, setIsRecording] = useState(false)
   const messagesEndRef = useRef(null)
-  const { isRecording, startRecording, stopRecording } = useAudioRecorder()
+  const recRef = useRef(null)
+  const streamingIdRef = useRef(null)
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
-  const send = async (text) => {
-    const q = text || input.trim()
+  const send = useCallback(async (text) => {
+    const q = (text || input).trim()
     if (!q || loading) return
     setInput('')
     setMessages(prev => [...prev, { role: 'user', content: q }])
     setLoading(true)
-    try {
-      const answer = await askCopilot(q)
-      setMessages(prev => [...prev, { role: 'ai', content: answer }])
-    } catch {
-      setMessages(prev => [...prev, { role: 'ai', content: 'Kuch gadbad ho gayi. Backend se connect nahi ho paya.' }])
-    } finally {
-      setLoading(false)
-    }
-  }
+
+    // Add an empty streaming AI message
+    const msgId = Date.now()
+    streamingIdRef.current = msgId
+    setMessages(prev => [...prev, { id: msgId, role: 'ai', content: '', streaming: true }])
+
+    let firstChunk = true
+    await askCopilotStream(
+      q,
+      (chunk) => {
+        if (firstChunk) { setLoading(false); firstChunk = false }
+        setMessages(prev =>
+          prev.map(m => m.id === msgId ? { ...m, content: m.content + chunk } : m)
+        )
+      },
+      () => {
+        // Stream complete — remove cursor
+        setLoading(false)
+        setMessages(prev =>
+          prev.map(m => m.id === msgId ? { ...m, streaming: false } : m)
+        )
+      },
+      'dashboard'
+    )
+    setLoading(false)
+  }, [input, loading])
 
   const handleKeyDown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }
 
+  // Voice input via Web Speech API
+  const toggleVoice = useCallback(() => {
+    if (isRecording) {
+      recRef.current?.stop()
+      setIsRecording(false)
+      return
+    }
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (!SpeechRec) { alert('Voice input not supported in this browser.'); return }
+    const rec = new SpeechRec()
+    rec.lang = 'hi-IN'
+    rec.interimResults = false
+    rec.onresult = (e) => {
+      const transcript = e.results[0][0].transcript
+      setInput(transcript)
+      setIsRecording(false)
+    }
+    rec.onend = () => setIsRecording(false)
+    rec.onerror = () => setIsRecording(false)
+    rec.start()
+    recRef.current = rec
+    setIsRecording(true)
+  }, [isRecording])
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 0px)', overflow: 'hidden' }}>
+      {/* Cursor blink keyframe injected inline */}
+      <style>{`@keyframes askai-cursor-blink { 0%,100%{opacity:1} 50%{opacity:0} }`}</style>
+
       {/* Header */}
       <div style={{ padding: '32px 32px 0' }}>
         <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--dash-text)', marginBottom: 4 }}>🤖 Ask AI</h1>
@@ -71,7 +132,9 @@ export default function AskAI() {
 
       {/* Messages */}
       <div className="askai-messages" style={{ flex: 1, overflowY: 'auto', padding: '16px 32px' }}>
-        {messages.map((msg, i) => <Message key={i} msg={msg} />)}
+        {messages.map((msg, i) => <Message key={msg.id || i} msg={msg} />)}
+
+        {/* Three-dot loader only shown before the FIRST chunk */}
         {loading && (
           <div className="askai-msg ai">
             <div className="askai-avatar"><Bot size={16} /></div>
@@ -98,8 +161,8 @@ export default function AskAI() {
         />
         <button
           className={`btn ${isRecording ? 'btn-danger' : 'btn-ghost'} btn-icon`}
-          onClick={isRecording ? stopRecording : startRecording}
-          title={isRecording ? 'Stop recording' : 'Voice input'}
+          onClick={toggleVoice}
+          title={isRecording ? 'Stop recording' : 'Voice input (Hindi)'}
           id="btn-askai-mic"
         >
           {isRecording ? <MicOff size={18} /> : <Mic size={18} />}

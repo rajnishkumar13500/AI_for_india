@@ -2,6 +2,8 @@ export interface LLMRequestOptions {
   systemPrompt?: string;
   temperature?: number;
   responseFormatJson?: boolean;
+  /** When true, callers want a shorter answer suitable for TTS / small screen */
+  shortAnswer?: boolean;
 }
 
 export class LLMClient {
@@ -44,6 +46,107 @@ export class LLMClient {
     }
 
     return this.fallbackGenerate(prompt);
+  }
+
+  /** Streaming variant — yields text chunks as they arrive (SSE delta). */
+  public async *generateTextStream(
+    prompt: string,
+    options: LLMRequestOptions = {}
+  ): AsyncIterable<string> {
+    const apiKey = this.getApiKey();
+    const provider = this.getProvider();
+
+    if (apiKey && apiKey.trim().length > 0) {
+      try {
+        if (provider === 'sarvam' || provider === 'openai' || provider === 'groq') {
+          yield* this.callOpenAICompatibleStream(prompt, options, apiKey, provider);
+          return;
+        }
+        // Gemini doesn't yet have a streaming helper — fall through to word-chunk fallback
+      } catch (err) {
+        console.warn(`LLM stream (${provider}) failed, falling back to word-chunk mode:`, err);
+      }
+    }
+
+    // Fallback: get full response then emit in word groups for a streaming feel
+    const full = await this.generateText(prompt, options);
+    yield* this.streamFallback(full);
+  }
+
+  /** Splits a pre-generated string into word-group chunks with small delays (simulated streaming). */
+  private async *streamFallback(text: string): AsyncIterable<string> {
+    if (!text) return;
+    const words = text.split(' ');
+    const CHUNK_SIZE = 3; // words per chunk
+    for (let i = 0; i < words.length; i += CHUNK_SIZE) {
+      const chunk = words.slice(i, i + CHUNK_SIZE).join(' ');
+      yield (i === 0 ? chunk : ' ' + chunk);
+      await new Promise(r => setTimeout(r, 40));
+    }
+  }
+
+  /** Streaming OpenAI-compatible SSE call — works for Sarvam, OpenAI, Groq. */
+  private async *callOpenAICompatibleStream(
+    prompt: string,
+    options: LLMRequestOptions,
+    apiKey: string,
+    provider: string
+  ): AsyncIterable<string> {
+    const isSarvam = provider === 'sarvam';
+    const baseUrl = isSarvam
+      ? 'https://api.sarvam.ai/v1/chat/completions'
+      : provider === 'groq'
+      ? 'https://api.groq.com/openai/v1/chat/completions'
+      : 'https://api.openai.com/v1/chat/completions';
+
+    const messages: Array<{ role: string; content: string }> = [];
+    if (options.systemPrompt) messages.push({ role: 'system', content: options.systemPrompt });
+    messages.push({ role: 'user', content: prompt });
+
+    const payload: Record<string, any> = {
+      model: this.getModel(),
+      messages,
+      temperature: options.temperature ?? 0.3,
+      stream: true,
+    };
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    };
+    if (isSarvam) headers['api-subscription-key'] = apiKey;
+
+    const res = await fetch(baseUrl, { method: 'POST', headers, body: JSON.stringify(payload) });
+
+    if (!res.ok || !res.body) {
+      const err = await res.text().catch(() => '');
+      throw new Error(`LLM stream error ${res.status}: ${err}`);
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? ''; // keep incomplete line in buffer
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data:')) continue;
+        const data = trimmed.slice(5).trim();
+        if (data === '[DONE]') return;
+        try {
+          const json = JSON.parse(data);
+          const delta = json.choices?.[0]?.delta?.content;
+          if (delta) yield delta;
+        } catch {
+          // malformed chunk — skip
+        }
+      }
+    }
   }
 
   private async callSarvam(prompt: string, options: LLMRequestOptions, apiKey: string): Promise<string> {

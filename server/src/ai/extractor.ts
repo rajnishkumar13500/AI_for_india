@@ -1,5 +1,6 @@
 import { ExtractionResult, ExtractedProduct } from '../types/index.js';
 import { llmClient } from './llm.js';
+import { safeJsonParse } from './jsonUtils.js';
 
 const SYSTEM_PROMPT = `You are a precision transaction extraction engine for India's small kirana and retail stores.
 Your task is to analyze conversational speech transcripts between customers and shopkeepers (in Hindi, Hinglish, or English) and extract structured transaction details.
@@ -56,31 +57,33 @@ export class TransactionExtractor {
       });
 
       if (llmOutput && llmOutput.trim().length > 0) {
-        const parsed = JSON.parse(llmOutput);
-        return {
-          transcript,
-          language,
-          products: (parsed.products || []).map((p: any) => ({
-            name: p.name,
-            quantity: Number(p.quantity) || 1,
-            unitPrice: p.unitPrice ? Number(p.unitPrice) : undefined,
-            confidence: Number(p.confidence) || 0.9,
-          })),
-          mentionedAmount: parsed.mentionedAmount ? Number(parsed.mentionedAmount) : null,
-          customerRequest: parsed.customerRequest || null,
-          isLostSale: Boolean(parsed.isLostSale),
-          lostSaleProduct: parsed.lostSaleProduct || undefined,
-          multiCustomer: Boolean(parsed.multiCustomer),
-          orderAmended: Boolean(parsed.orderAmended),
-          isUdhar: Boolean(parsed.isUdhar),
-          confidence: Number(parsed.confidence) || 0.9,
-          rawResponse: parsed,
-        };
+        const parsed = safeJsonParse<any>(llmOutput, null);
+        if (parsed && typeof parsed === 'object') {
+          return {
+            transcript,
+            language,
+            products: (parsed.products || []).map((p: any) => ({
+              name: String(p.name || 'Item'),
+              quantity: Number(p.quantity) || 1,
+              unitPrice: p.unitPrice ? Number(p.unitPrice) : undefined,
+              confidence: Number(p.confidence) || 0.9,
+            })),
+            mentionedAmount: parsed.mentionedAmount ? Number(parsed.mentionedAmount) : null,
+            customerRequest: parsed.customerRequest || null,
+            isLostSale: Boolean(parsed.isLostSale),
+            lostSaleProduct: parsed.lostSaleProduct || undefined,
+            multiCustomer: Boolean(parsed.multiCustomer),
+            orderAmended: Boolean(parsed.orderAmended),
+            isUdhar: Boolean(parsed.isUdhar),
+            confidence: Number(parsed.confidence) || 0.9,
+            rawResponse: parsed,
+          };
+        }
       }
-
     } catch (err) {
       console.warn('LLM extraction failed or returned invalid JSON. Using heuristic extractor:', err);
     }
+
 
     // Heuristic Fallback Extractor
     return this.heuristicExtract(transcript, language);

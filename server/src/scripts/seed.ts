@@ -165,6 +165,11 @@ export async function seedDatabase(): Promise<void> {
       const txnDate = new Date(dayTimestamp);
       txnDate.setHours(hour, minute, 0, 0);
 
+      // Ensure seed transaction timestamp is strictly in the past (before now)
+      if (txnDate.getTime() >= now) {
+        txnDate.setTime(now - (txnCount - t + 1) * 20 * 60000);
+      }
+
       const items: TransactionItem[] = [];
       let totalAmount = 0;
       let totalCost = 0;

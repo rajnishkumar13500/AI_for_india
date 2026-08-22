@@ -18,12 +18,12 @@ export async function startSession() {
   }
 }
 
-export async function uploadAudio(sessionId, audioBlob) {
+export async function uploadAudio(sessionId, audioBlob, liveText) {
   if (!USE_REAL_API) {
     await new Promise(r => setTimeout(r, 1500))
     return {
       sessionId,
-      transcript: 'Bhaiya 2 Maggi aur ek Coke dena.',
+      transcript: liveText || 'Bhaiya 2 Maggi aur ek Coke dena.',
       language: 'hi',
       extractedProducts: [
         { name: 'Maggi 2-Min Noodles', quantity: 2, unitPrice: 15 },
@@ -33,42 +33,66 @@ export async function uploadAudio(sessionId, audioBlob) {
       status: 'ANALYZING',
     }
   }
+
   try {
-    const form = new FormData()
-    form.append('audio', audioBlob, 'recording.webm')
-    form.append('merchantId', MERCHANT_ID)
-    const res = await fetch(`${API_BASE}/sessions/${sessionId}/audio`, { method: 'POST', body: form })
-    const json = await res.json()
-    const data = json.data ?? json
+    let data = null
+    // 1. If audio blob is provided, send audio file
+    if (audioBlob && audioBlob.size > 0) {
+      const form = new FormData()
+      form.append('audio', audioBlob, 'recording.webm')
+      form.append('merchantId', MERCHANT_ID)
+      const res = await fetch(`${API_BASE}/sessions/${sessionId}/audio`, { method: 'POST', body: form })
+      const json = await res.json()
+      data = json.data ?? json
+    }
+
+    // 2. If no audio or audio STT gave empty transcript, use liveText if available
+    const transcript = data?.transcript || data?.extraction?.transcript
+    if ((!transcript || transcript.trim().length === 0) && liveText && liveText.trim().length > 0) {
+      const voiceRes = await fetch(`${API_BASE}/sessions/${sessionId}/voice`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: liveText, lang: 'hi-IN', merchantId: MERCHANT_ID }),
+      })
+      const voiceJson = await voiceRes.json()
+      data = voiceJson.data ?? voiceJson
+    }
+
+    if (!data) throw new Error('No extraction data returned')
+
     const extraction = data.extraction || data
+    const products = (extraction.products || extraction.extractedProducts || []).map((p) => ({
+      name: p.matchedProductName || p.name || 'Item',
+      quantity: Number(p.quantity) || 1,
+      unitPrice: Number(p.unitPrice) || 40,
+    }))
+
     return {
       sessionId: data.id || sessionId,
-      transcript: data.transcript || extraction.transcript || 'Bhaiya 2 Maggi aur ek Coke dena.',
-      extractedProducts: (extraction.products || extraction.extractedProducts || [
-        { name: 'Maggi 2-Min Noodles', quantity: 2, unitPrice: 15 },
-        { name: 'Coca-Cola 500ml', quantity: 1, unitPrice: 50 },
-      ]).map((p) => ({
-        name: p.matchedProductName || p.name,
-        quantity: p.quantity || 1,
-        unitPrice: p.unitPrice || 50,
-      })),
-      confidence: extraction.confidence || data.confidence || 0.97,
+      transcript: data.transcript || extraction.transcript || liveText || '',
+      extractedProducts: products,
+      isLostSale: Boolean(extraction.isLostSale),
+      lostSaleProduct: extraction.lostSaleProduct || null,
+      isUdhar: Boolean(extraction.isUdhar),
+      multiCustomer: Boolean(extraction.multiCustomer),
+      orderAmended: Boolean(extraction.orderAmended),
+      mentionedAmount: extraction.mentionedAmount || null,
+      confidence: extraction.confidence || data.confidence || (products.length > 0 ? 0.9 : 0.4),
       status: data.status || 'ANALYZING',
       raw: data,
     }
-  } catch {
-    // Fallback to demo extraction
+  } catch (err) {
+    console.warn('uploadAudio error:', err)
     return {
       sessionId,
-      transcript: 'Bhaiya 2 Maggi aur ek Coke dena.',
-      extractedProducts: [
-        { name: 'Maggi 2-Min Noodles', quantity: 2, unitPrice: 15 },
-        { name: 'Coca-Cola 500ml', quantity: 1, unitPrice: 50 },
-      ],
-      confidence: 0.97,
+      transcript: liveText || '',
+      extractedProducts: [],
+      confidence: 0,
+      error: err.message,
     }
   }
 }
+
 
 export async function runDemoScenario(scenarioId) {
   try {

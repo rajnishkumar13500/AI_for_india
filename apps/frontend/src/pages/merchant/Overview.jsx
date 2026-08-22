@@ -39,6 +39,28 @@ function InsightCard({ type, title, body, actionLabel, typeColor, icon }) {
   )
 }
 
+/** Normalise confidence from whatever the backend/mock sends to a 0–100 integer */
+function normaliseConfidence(raw) {
+  if (raw == null) return 97
+  // Backend now sends integer 0-100; old mocks send float 0-1
+  const n = Number(raw)
+  return n <= 1 ? Math.round(n * 100) : Math.round(n)
+}
+
+/** Format a timestamp string — handles both `timestamp` and `createdAt` field names */
+function formatTime(t) {
+  const raw = t.timestamp || t.createdAt
+  if (!raw) return t.formattedTime || '—'
+  try {
+    return new Date(raw).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
+  } catch { return '—' }
+}
+
+/** Get total amount — handles all field name variants the backend/mock may use */
+function getAmount(t) {
+  return t.totalAmount ?? t.amount ?? t.paymentAmount ?? t.transactionAmount ?? 0
+}
+
 export default function Overview() {
   const [data, setData] = useState(null)
   const [transactions, setTransactions] = useState([])
@@ -86,6 +108,12 @@ export default function Overview() {
   const revenueChart = data?.revenueChart || []
   const insights = data?.insights || []
 
+  // Build trend label from real data
+  const growthPct   = stats.revenueGrowthPercent != null ? `${stats.revenueGrowthPercent > 0 ? '↑' : '↓'} ${Math.abs(stats.revenueGrowthPercent)}% vs yesterday` : '↑ vs yesterday'
+  const txnYestDiff = stats.todayTransactions != null && stats.yesterdayTransactions != null
+    ? `${stats.todayTransactions >= stats.yesterdayTransactions ? '↑' : '↓'} vs yesterday`
+    : '↑ vs yesterday'
+
   return (
     <div className="page-enter">
       {/* Header */}
@@ -99,12 +127,40 @@ export default function Overview() {
         </button>
       </div>
 
-      {/* Stats */}
+      {/* Stats — all values come from real API, zero is shown as zero */}
       <div className="grid-4" style={{ marginBottom: 24 }}>
-        <StatCard label="Today's Revenue" value={`₹${(stats.todayRevenue || 18420).toLocaleString('en-IN')}`} trend="up" trendVal="↑ 12% vs yesterday" icon={IndianRupee} iconBg="linear-gradient(135deg,#00b36b,#009456)" />
-        <StatCard label="Transactions" value={stats.transactionCount || 137} trend="up" trendVal="↑ 8% vs yesterday" icon={Activity} iconBg="linear-gradient(135deg,#00BAF2,#0097c7)" />
-        <StatCard label="Avg Transaction" value={`₹${stats.avgTransactionValue || 134}`} trend="up" trendVal="↑ 4% this week" icon={ShoppingBag} iconBg="linear-gradient(135deg,#002970,#003d99)" />
-        <StatCard label="Returning Customers" value={stats.returningCustomers || 23} trend="down" trendVal="↓ 26% this week" icon={Users} iconBg="linear-gradient(135deg,#FF9900,#e08800)" />
+        <StatCard
+          label="Today's Revenue"
+          value={`₹${(stats.todayRevenue ?? 0).toLocaleString('en-IN')}`}
+          trend={stats.revenueGrowthPercent >= 0 ? 'up' : 'down'}
+          trendVal={growthPct}
+          icon={IndianRupee}
+          iconBg="linear-gradient(135deg,#00b36b,#009456)"
+        />
+        <StatCard
+          label="Transactions"
+          value={(stats.todayTransactions ?? stats.transactionCount ?? 0).toLocaleString('en-IN')}
+          trend="up"
+          trendVal={txnYestDiff}
+          icon={Activity}
+          iconBg="linear-gradient(135deg,#00BAF2,#0097c7)"
+        />
+        <StatCard
+          label="Avg Transaction"
+          value={`₹${(stats.avgTransactionValue ?? 0).toLocaleString('en-IN')}`}
+          trend="up"
+          trendVal="avg basket size"
+          icon={ShoppingBag}
+          iconBg="linear-gradient(135deg,#002970,#003d99)"
+        />
+        <StatCard
+          label="Returning Customers"
+          value={(stats.returningCustomers ?? stats.returningCustomersToday ?? 0).toLocaleString('en-IN')}
+          trend="up"
+          trendVal="today"
+          icon={Users}
+          iconBg="linear-gradient(135deg,#FF9900,#e08800)"
+        />
       </div>
 
       {/* Revenue Chart */}
@@ -117,7 +173,7 @@ export default function Overview() {
             <AreaChart data={revenueChart} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id="rev-grad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#002970" stopOpacity={0.25} />
+                  <stop offset="5%"  stopColor="#002970" stopOpacity={0.25} />
                   <stop offset="95%" stopColor="#002970" stopOpacity={0} />
                 </linearGradient>
               </defs>
@@ -140,7 +196,7 @@ export default function Overview() {
               <InsightCard key={i}
                 type={ins.type || 'Insight'}
                 title={ins.title}
-                body={ins.description || ins.body}
+                body={ins.recommendation || ins.whatHappened || ins.description || ins.body}
                 actionLabel={ins.actionLabel}
                 typeColor={ins.type === 'OPPORTUNITY' ? 'var(--success)' : ins.type === 'RISK' ? 'var(--danger)' : 'var(--warning)'}
                 icon={ins.type === 'OPPORTUNITY' ? '🔥' : ins.type === 'RISK' ? '⚠️' : '📉'}
@@ -162,39 +218,46 @@ export default function Overview() {
                 <th>Transaction ID</th>
                 <th>Products</th>
                 <th>Amount</th>
+                <th>Payment Mode</th>
                 <th>Confidence</th>
                 <th>Status</th>
                 <th>Time</th>
               </tr>
             </thead>
             <tbody>
-              {transactions.map((t, i) => (
-                <tr key={t.id || i}>
-                  <td><span className="font-mono text-sm" style={{ color: 'var(--dash-text-2)' }}>{t.id?.slice(-8) || `TXN-${1000 + i}`}</span></td>
-                  <td>{
-                    (t.items || t.products || t.extractedProducts || [])
-                      .map(p => `${p.name || p.productName}×${p.quantity}`)
-                      .join(', ') || '—'
-                  }</td>
-                  <td><strong>{(() => {
-                    const amt = t.amount || t.paymentAmount || t.totalAmount || t.transactionAmount
-                    return amt && amt > 0 ? `₹${amt.toLocaleString('en-IN')}` : '—'
-                  })()}</strong></td>
-                  <td>
-                    <span className={`badge ${(t.confidence || 0.97) > 0.9 ? 'badge-green' : (t.confidence || 0.97) > 0.7 ? 'badge-yellow' : 'badge-red'}`}>
-                      {Math.round((t.confidence || 0.97) * 100)}%
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`badge ${t.status === 'MATCHED' || t.reconciliationStatus === 'MATCHED' ? 'badge-green' : 'badge-yellow'}`}>
-                      {t.status || t.reconciliationStatus || 'MATCHED'}
-                    </span>
-                  </td>
-                  <td style={{ color: 'var(--dash-text-2)', fontSize: '.8rem' }}>
-                    {t.createdAt ? new Date(t.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '—'}
-                  </td>
-                </tr>
-              ))}
+              {transactions.map((t, i) => {
+                const conf = normaliseConfidence(t.confidence)
+                const amt  = getAmount(t)
+                const method = (t.paymentMethod || 'QR').toUpperCase()
+                // items: backend sends `items[].productName`, mocks may send `products[].name`
+                const items = t.items || t.products || t.extractedProducts || []
+                const itemStr = items.map(p => `${p.productName || p.name || 'Item'}×${p.quantity}`).join(', ') || '—'
+                return (
+                  <tr key={t.id || i}>
+                    <td><span className="font-mono text-sm" style={{ color: 'var(--dash-text-2)' }}>{t.id?.slice(-8) || `TXN-${1000 + i}`}</span></td>
+                    <td>{itemStr}</td>
+                    <td><strong>{amt > 0 ? `₹${amt.toLocaleString('en-IN')}` : '—'}</strong></td>
+                    <td>
+                      <span className={`badge ${method === 'CASH' ? 'badge-green' : method === 'UDHAR' ? 'badge-purple' : 'badge-blue'}`}>
+                        {method === 'CASH' ? '💵 Cash' : method === 'UDHAR' ? '📒 Khata' : '📱 UPI'}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`badge ${conf >= 90 ? 'badge-green' : conf >= 70 ? 'badge-yellow' : 'badge-red'}`}>
+                        {conf}%
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`badge ${(t.status === 'MATCHED' || t.reconciliationStatus === 'MATCHED') ? 'badge-green' : 'badge-yellow'}`}>
+                        {t.status || t.reconciliationStatus || 'MATCHED'}
+                      </span>
+                    </td>
+                    <td style={{ color: 'var(--dash-text-2)', fontSize: '.8rem' }}>
+                      {formatTime(t)}
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>

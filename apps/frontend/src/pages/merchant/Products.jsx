@@ -52,7 +52,8 @@ export default function Products() {
           </thead>
           <tbody>
             {products.map((p, i) => {
-              const growth = p.growthPercent ?? p.growth ?? (Math.random() > 0.5 ? Math.floor(Math.random()*30)+1 : -(Math.floor(Math.random()*20)+1))
+              // growthPercent comes from the analytics engine — use 0 if absent, never random
+              const growth = p.growthPercent ?? p.growth ?? 0
               return (
                 <tr key={p.id || i}>
                   <td style={{ color: 'var(--dash-text-3)', fontWeight: 600 }}>{i + 1}</td>
