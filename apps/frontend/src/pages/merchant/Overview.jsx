@@ -91,7 +91,7 @@ export default function Overview() {
       {/* Header */}
       <div className="page-header flex items-center justify-between">
         <div>
-          <h1>{greet()}, Rajesh 👋</h1>
+          <h1 style={{ color: 'var(--paytm-navy)' }}>{greet()}, Rajesh 👋</h1>
           <p>Here's what happened today{lastUpdate && ` · Updated ${lastUpdate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`}</p>
         </div>
         <button className="btn btn-ghost btn-sm" onClick={load} id="btn-refresh-overview">
@@ -101,10 +101,10 @@ export default function Overview() {
 
       {/* Stats */}
       <div className="grid-4" style={{ marginBottom: 24 }}>
-        <StatCard label="Today's Revenue" value={`₹${(stats.todayRevenue || 18420).toLocaleString('en-IN')}`} trend="up" trendVal="↑ 12% vs yesterday" icon={IndianRupee} iconBg="linear-gradient(135deg,#10b981,#059669)" />
+        <StatCard label="Today's Revenue" value={`₹${(stats.todayRevenue || 18420).toLocaleString('en-IN')}`} trend="up" trendVal="↑ 12% vs yesterday" icon={IndianRupee} iconBg="linear-gradient(135deg,#00b36b,#009456)" />
         <StatCard label="Transactions" value={stats.transactionCount || 137} trend="up" trendVal="↑ 8% vs yesterday" icon={Activity} iconBg="linear-gradient(135deg,#00BAF2,#0097c7)" />
-        <StatCard label="Avg Transaction" value={`₹${stats.avgTransactionValue || 134}`} trend="up" trendVal="↑ 4% this week" icon={ShoppingBag} iconBg="linear-gradient(135deg,#6366f1,#4f46e5)" />
-        <StatCard label="Returning Customers" value={stats.returningCustomers || 23} trend="down" trendVal="↓ 26% this week" icon={Users} iconBg="linear-gradient(135deg,#f59e0b,#d97706)" />
+        <StatCard label="Avg Transaction" value={`₹${stats.avgTransactionValue || 134}`} trend="up" trendVal="↑ 4% this week" icon={ShoppingBag} iconBg="linear-gradient(135deg,#002970,#003d99)" />
+        <StatCard label="Returning Customers" value={stats.returningCustomers || 23} trend="down" trendVal="↓ 26% this week" icon={Users} iconBg="linear-gradient(135deg,#FF9900,#e08800)" />
       </div>
 
       {/* Revenue Chart */}
@@ -117,15 +117,15 @@ export default function Overview() {
             <AreaChart data={revenueChart} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id="rev-grad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#00BAF2" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="#00BAF2" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#002970" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#002970" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--dash-border)" />
               <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'var(--dash-text-2)' }} tickLine={false} />
               <YAxis tick={{ fontSize: 11, fill: 'var(--dash-text-2)' }} tickLine={false} axisLine={false} tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} />
               <Tooltip formatter={v => [`₹${v.toLocaleString('en-IN')}`, 'Revenue']} contentStyle={{ background: 'var(--dash-surface)', border: '1px solid var(--dash-border)', borderRadius: 8, fontSize: 13 }} />
-              <Area type="monotone" dataKey="revenue" stroke="#00BAF2" strokeWidth={2.5} fill="url(#rev-grad)" dot={false} />
+              <Area type="monotone" dataKey="revenue" stroke="#002970" strokeWidth={2.5} fill="url(#rev-grad)" dot={false} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -171,8 +171,15 @@ export default function Overview() {
               {transactions.map((t, i) => (
                 <tr key={t.id || i}>
                   <td><span className="font-mono text-sm" style={{ color: 'var(--dash-text-2)' }}>{t.id?.slice(-8) || `TXN-${1000 + i}`}</span></td>
-                  <td>{t.items?.map(p => `${p.name}×${p.quantity}`).join(', ') || '—'}</td>
-                  <td><strong>₹{t.amount?.toLocaleString('en-IN') || '—'}</strong></td>
+                  <td>{
+                    (t.items || t.products || t.extractedProducts || [])
+                      .map(p => `${p.name || p.productName}×${p.quantity}`)
+                      .join(', ') || '—'
+                  }</td>
+                  <td><strong>{(() => {
+                    const amt = t.amount || t.paymentAmount || t.totalAmount || t.transactionAmount
+                    return amt && amt > 0 ? `₹${amt.toLocaleString('en-IN')}` : '—'
+                  })()}</strong></td>
                   <td>
                     <span className={`badge ${(t.confidence || 0.97) > 0.9 ? 'badge-green' : (t.confidence || 0.97) > 0.7 ? 'badge-yellow' : 'badge-red'}`}>
                       {Math.round((t.confidence || 0.97) * 100)}%
