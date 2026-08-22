@@ -54,6 +54,18 @@ export class SessionController {
     }
   }
 
+  /** Returns the most recent active (non-completed/cancelled) session.
+   *  Used by the device UI to restore state on page refresh or reconnect. */
+  public async getActiveSession(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const merchantId = req.query.merchantId ? String(req.query.merchantId) : 'M001';
+      const session = await sessionRepo.findActive(merchantId);
+      res.json({ success: true, data: session });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   public async uploadAudio(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const id = req.params.id as string;

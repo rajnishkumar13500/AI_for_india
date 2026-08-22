@@ -284,7 +284,7 @@ stateDiagram-v2
 - **File**: `server/src/ai/extractor.ts`
 - **Purpose**: Converts natural speech transcripts into structured item lists.
 - **Features**:
-  - LLM extraction via Gemini/OpenAI/Groq with structured JSON schema.
+  - LLM extraction via Sarvam AI (`sarvam-105b-conversations` / `sarvam-102b`) / OpenAI / Gemini / Groq with structured JSON schema.
   - **Built-in Deterministic Regex & Hindi Numeral Parser**: Extracts quantities (*ek*, *do*, *teen*, *char*, *paanch*), prices (*assi*, *sau*, *dedh sau*), and detect lost sales keywords (*"nahi hai"*, *"khatam ho gaya"*).
 
 ---

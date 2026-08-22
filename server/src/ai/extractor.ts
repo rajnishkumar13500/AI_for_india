@@ -4,24 +4,32 @@ import { llmClient } from './llm.js';
 const SYSTEM_PROMPT = `You are a precision transaction extraction engine for India's small kirana and retail stores.
 Your task is to analyze conversational speech transcripts between customers and shopkeepers (in Hindi, Hinglish, or English) and extract structured transaction details.
 
-Rules:
-1. Extract only explicitly mentioned products, their quantities, and mentioned prices/amounts.
-2. Recognize Hindi numbers: "ek" = 1, "do" = 2, "teen" = 3, "char" = 4, "paanch" = 5, "aadha" = 0.5.
-3. Detect if a product was requested but unavailable/out of stock (Lost Sale). Set isLostSale: true and lostSaleProduct to that item name.
-4. Output strictly valid JSON matching this schema:
+Critical real-world scenarios you MUST handle:
+1. MULTI-CUSTOMER: If the audio contains multiple customers speaking in sequence or interrupting each other
+   (signals: "pehle iska", "phir mera", "ek second", "bhaiya mera bhi", "aur mujhe", "main bhi"),
+   merge ALL items from ALL customers into one combined products list (it all goes on one counter/payment session).
+   Set multiCustomer: true.
+2. ORDER CHANGE: If a customer changes their mind ("nahi, ek zyada", "actually do chahiye", "ek wapas karo"),
+   reflect the FINAL requested quantities only. Set orderAmended: true.
+3. CREDIT / UDHAR: If customer asks to put on credit ("udhar kar do", "kal deta hoon", "credit"),
+   set isUdhar: true. Still extract products.
+4. PRICE NEGOTIATION: Ignore haggling/negotiation. Extract final agreed/asked price only.
+5. Hindi numbers: "ek"=1, "do"=2, "teen"=3, "char"=4, "paanch"=5, "chhe"=6, "aadha"=0.5, "dedh"=1.5.
+6. Mixed language: handle English product names said in Hindi accent ("biscoot"=biscuit, "choklet"=chocolate, "wafar"=wafer).
+7. Detect if a product was requested but unavailable (Lost Sale): set isLostSale: true, lostSaleProduct to item name.
+
+Output strictly valid JSON:
 {
   "products": [
-    {
-      "name": "Maggi",
-      "quantity": 2,
-      "unitPrice": 15,
-      "confidence": 0.95
-    }
+    { "name": "Maggi", "quantity": 2, "unitPrice": 15, "confidence": 0.95 }
   ],
   "mentionedAmount": 80,
   "customerRequest": "2 Maggi and 1 Coke",
   "isLostSale": false,
   "lostSaleProduct": null,
+  "multiCustomer": false,
+  "orderAmended": false,
+  "isUdhar": false,
   "confidence": 0.95
 }`;
 
@@ -62,10 +70,14 @@ export class TransactionExtractor {
           customerRequest: parsed.customerRequest || null,
           isLostSale: Boolean(parsed.isLostSale),
           lostSaleProduct: parsed.lostSaleProduct || undefined,
+          multiCustomer: Boolean(parsed.multiCustomer),
+          orderAmended: Boolean(parsed.orderAmended),
+          isUdhar: Boolean(parsed.isUdhar),
           confidence: Number(parsed.confidence) || 0.9,
           rawResponse: parsed,
         };
       }
+
     } catch (err) {
       console.warn('LLM extraction failed or returned invalid JSON. Using heuristic extractor:', err);
     }

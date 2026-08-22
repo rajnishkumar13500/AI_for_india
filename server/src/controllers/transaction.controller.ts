@@ -6,13 +6,38 @@ import { productRepo } from '../db/repositories/product.repo.js';
 import { socketManager } from '../sockets/socketManager.js';
 import { Transaction, TransactionItem } from '../types/index.js';
 
+/** Normalize a transaction so both `name` and `productName` are always present on items,
+ * confidence is integer 0-100, and a formatted timestamp is included. */
+function normalizeTransaction(t: Transaction) {
+  const items = (t.items || []).map((item) => ({
+    ...item,
+    // ensure both aliases exist regardless of which one the frontend reads
+    name: item.productName || (item as any).name || 'Unknown',
+    productName: item.productName || (item as any).name || 'Unknown',
+  }));
+
+  // confidence stored as 0-100 integer in seed; guard against 0-1 float from old records
+  const confidenceRaw = t.confidence ?? 100;
+  const confidence = confidenceRaw <= 1 ? Math.round(confidenceRaw * 100) : Math.round(confidenceRaw);
+
+  const ts = t.timestamp ? new Date(t.timestamp) : null;
+  const formattedTime = ts
+    ? ts.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
+    : null;
+  const formattedDate = ts
+    ? ts.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })
+    : null;
+
+  return { ...t, items, confidence, formattedTime, formattedDate };
+}
+
 export class TransactionController {
   public async listTransactions(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const merchantId = req.query.merchantId ? String(req.query.merchantId) : undefined;
       const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50;
       const transactions = await transactionRepo.findRecent(limit, merchantId);
-      res.json({ success: true, data: transactions });
+      res.json({ success: true, data: transactions.map(normalizeTransaction) });
     } catch (err) {
       next(err);
     }
@@ -26,7 +51,7 @@ export class TransactionController {
         res.status(404).json({ success: false, error: 'Transaction not found' });
         return;
       }
-      res.json({ success: true, data: transaction });
+      res.json({ success: true, data: normalizeTransaction(transaction) });
     } catch (err) {
       next(err);
     }

@@ -71,6 +71,12 @@ export interface ExtractionResult {
   customerRequest: string | null;
   isLostSale: boolean;
   lostSaleProduct?: string;
+  /** True when 2+ customers were talking in the same audio capture */
+  multiCustomer?: boolean;
+  /** True when customer changed their mind and quantities were adjusted */
+  orderAmended?: boolean;
+  /** True when customer asked for credit (udhar) instead of paying now */
+  isUdhar?: boolean;
   confidence: number;
   rawResponse?: any;
 }

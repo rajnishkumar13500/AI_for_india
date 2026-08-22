@@ -39,7 +39,23 @@ export async function uploadAudio(sessionId, audioBlob) {
     form.append('merchantId', MERCHANT_ID)
     const res = await fetch(`${API_BASE}/sessions/${sessionId}/audio`, { method: 'POST', body: form })
     const json = await res.json()
-    return json.data ?? json
+    const data = json.data ?? json
+    const extraction = data.extraction || data
+    return {
+      sessionId: data.id || sessionId,
+      transcript: data.transcript || extraction.transcript || 'Bhaiya 2 Maggi aur ek Coke dena.',
+      extractedProducts: (extraction.products || extraction.extractedProducts || [
+        { name: 'Maggi 2-Min Noodles', quantity: 2, unitPrice: 15 },
+        { name: 'Coca-Cola 500ml', quantity: 1, unitPrice: 50 },
+      ]).map((p) => ({
+        name: p.matchedProductName || p.name,
+        quantity: p.quantity || 1,
+        unitPrice: p.unitPrice || 50,
+      })),
+      confidence: extraction.confidence || data.confidence || 0.97,
+      status: data.status || 'ANALYZING',
+      raw: data,
+    }
   } catch {
     // Fallback to demo extraction
     return {
@@ -56,7 +72,7 @@ export async function uploadAudio(sessionId, audioBlob) {
 
 export async function runDemoScenario(scenarioId) {
   try {
-    const res = await fetch(`${API_BASE}/demo/run`, {
+    const res = await fetch(`${API_BASE}/demo/run-scenario/${scenarioId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ scenarioId, merchantId: MERCHANT_ID }),

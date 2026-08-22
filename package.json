@@ -11,7 +11,8 @@
     "dev": "npm --prefix server run dev",
     "dev:server": "npm --prefix server run dev",
     "dev:frontend": "npm --prefix apps/frontend run dev",
-    "dev": "start npm --prefix server run dev && npm --prefix apps/frontend run dev",
+    "build:frontend": "npm --prefix apps/frontend run build",
+    "build:server": "npm --prefix server run build",
     "seed": "npm --prefix server run seed",
     "test:api": "npm --prefix server run test:api"
   },

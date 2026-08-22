@@ -25,5 +25,12 @@ export async function askCopilot(question) {
     body: JSON.stringify({ merchantId: MERCHANT_ID, question }),
   })
   const json = await res.json()
-  return json.data?.answer ?? json.answer ?? 'Sorry, kuch gadbad ho gayi. Dobara try karo.'
+  return (
+    json.data?.answerHinglish ||
+    json.data?.answerEnglish ||
+    json.data?.answer ||
+    json.answer ||
+    'Sorry, kuch gadbad ho gayi. Dobara try karo.'
+  )
 }
+

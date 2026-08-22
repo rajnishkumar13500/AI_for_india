@@ -19,7 +19,7 @@ export class DemoController {
 
   public async runScenario(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const id = req.params.id as string;
+      const id = (req.params.id || req.body?.scenarioId || req.body?.id) as string;
       const scenario = DEMO_SCENARIOS.find((s) => s.id === id);
 
       if (!scenario) {
