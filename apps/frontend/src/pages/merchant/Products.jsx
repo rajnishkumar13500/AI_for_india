@@ -36,7 +36,7 @@ export default function Products() {
             <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'var(--dash-text-2)' }} tickLine={false} />
             <YAxis tick={{ fontSize: 11, fill: 'var(--dash-text-2)' }} tickLine={false} axisLine={false} />
             <Tooltip contentStyle={{ background: 'var(--dash-surface)', border: '1px solid var(--dash-border)', borderRadius: 8, fontSize: 13 }} />
-            <Bar dataKey="units" fill="#00BAF2" radius={[4,4,0,0]} />
+            <Bar dataKey="units" fill="#002970" radius={[4,4,0,0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>

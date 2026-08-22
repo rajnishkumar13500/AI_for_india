@@ -1,134 +1,151 @@
 /* ============================================================
-   PAYTM VYAPAR AI — Global Design System
+   PAYTM VYAPAR AI — Exact Paytm Brand Rebuild
+   Based on: paytm.com + paytm.com/recharge reference screenshots
+   
+   Logo:     "paytm" lowercase, rounded font, teal "t"
+   Primary:  #002970  (Paytm Dark Navy)
+   Accent:   #00BAF2  (Paytm Cyan — buttons, links, active)
+   BG:       #F5F7FA  (Paytm page background)
+   Surface:  #FFFFFF  (Paytm card white)
+   Text:     #1A1A1A  (Paytm body text)
+   Border:   #E0E0E0  (Paytm input/card border)
    ============================================================ */
 
-/* Google Fonts already loaded via index.html */
+/* ── Fonts — Paytm uses a custom rounded font; DM Sans is closest ── */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap');
 
 /* ── CSS Variables ─────────────────────────────────────────── */
 :root {
-  --font-base: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-base: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
-  /* Paytm Blue Palette */
-  --blue-50:  #eff6ff;
-  --blue-100: #dbeafe;
-  --blue-200: #bfdbfe;
-  --blue-400: #60a5fa;
-  --blue-500: #3b82f6;
-  --blue-600: #002970;
-  --blue-700: #00214f;
-  --blue-900: #001535;
+  /* ── Exact Paytm Colours (from screenshots) ── */
+  --paytm-navy:       #002970;   /* Paytm dark navy — header, sidebar, icons bg */
+  --paytm-navy-hover: #003080;
+  --paytm-navy-light: #EEF3FC;   /* Light navy tint — active states, badge bg */
+  --paytm-cyan:       #00BAF2;   /* Paytm cyan — primary CTA buttons, links, active */
+  --paytm-cyan-dark:  #009DC8;   /* Darker cyan for hover */
+  --paytm-cyan-light: #E5F7FD;   /* Light cyan tint */
+  --paytm-white:      #FFFFFF;
+  --paytm-bg:         #F5F7FA;   /* Paytm page grey background */
+  --paytm-card:       #FFFFFF;   /* Card surface */
+  --paytm-border:     #E0E0E0;   /* Input/card border — same as paytm.com */
+  --paytm-border-light: #EBEBEB;
+  --paytm-text:       #1A1A1A;   /* Paytm body text */
+  --paytm-text-2:     #555555;   /* Paytm secondary text */
+  --paytm-text-3:     #9E9E9E;   /* Paytm placeholder/muted */
+  --paytm-red:        #ED3237;   /* Paytm red (heart in logo) */
+  --paytm-orange:     #FF9900;   /* Paytm orange (UPI badge) */
 
-  /* Primary Brand */
-  --primary:       #00BAF2;
-  --primary-dark:  #0097c7;
-  --primary-light: #e0f7fd;
-  --paytm-blue:    #002970;
+  /* Semantic */
+  --success:    #12A85A;
+  --success-bg: #E9F7EF;
+  --warning:    #FF9900;
+  --warning-bg: #FFF3E0;
+  --danger:     #ED3237;
+  --danger-bg:  #FDECEA;
 
-  /* Semantic Colors */
-  --success:    #10b981;
-  --success-bg: #d1fae5;
-  --warning:    #f59e0b;
-  --warning-bg: #fef3c7;
-  --danger:     #ef4444;
-  --danger-bg:  #fee2e2;
-  --info:       #6366f1;
-  --info-bg:    #ede9fe;
+  /* Aliases */
+  --primary:       var(--paytm-cyan);
+  --primary-dark:  var(--paytm-cyan-dark);
+  --primary-light: var(--paytm-cyan-light);
+  --paytm-blue:    var(--paytm-navy);
 
-  /* Dashboard (Light) Theme */
-  --dash-bg:         #f8fafc;
-  --dash-surface:    #ffffff;
-  --dash-surface-2:  #f1f5f9;
-  --dash-border:     #e2e8f0;
-  --dash-text:       #0f172a;
-  --dash-text-2:     #475569;
-  --dash-text-3:     #94a3b8;
-  --dash-sidebar-bg: #001535;
+  /* Dash theme aliases */
+  --dash-bg:           var(--paytm-bg);
+  --dash-surface:      var(--paytm-card);
+  --dash-surface-2:    #F0F2F5;
+  --dash-border:       var(--paytm-border);
+  --dash-text:         var(--paytm-text);
+  --dash-text-2:       var(--paytm-text-2);
+  --dash-text-3:       var(--paytm-text-3);
+  --dash-sidebar-bg:   var(--paytm-navy);
   --dash-sidebar-text: rgba(255,255,255,0.75);
-  --dash-sidebar-active: #00BAF2;
+  --dash-sidebar-active: var(--paytm-cyan);
 
-  /* Device (Dark) Theme */
-  --device-bg:       #070d1a;
-  --device-surface:  #0d1629;
-  --device-surface-2:#1a2540;
+  /* Device theme */
+  --device-bg:       #001F5B;
+  --device-surface:  #002266;
+  --device-surface-2:#003080;
   --device-border:   rgba(0,186,242,0.2);
-  --device-text:     #f0f6ff;
-  --device-text-2:   rgba(240,246,255,0.6);
+  --device-text:     #FFFFFF;
+  --device-text-2:   rgba(255,255,255,0.6);
   --device-accent:   #00BAF2;
-  --device-glow:     rgba(0,186,242,0.15);
 
   /* Spacing */
-  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
   --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px;
   --sp-12: 48px; --sp-16: 64px;
 
-  /* Radius */
-  --r-sm: 6px; --r-md: 10px; --r-lg: 16px; --r-xl: 24px; --r-full: 9999px;
+  /* Radius — Paytm uses 8-12px for cards, 50px for pills */
+  --r-sm:   4px;
+  --r-md:   8px;   /* Paytm card/input radius */
+  --r-lg:   12px;
+  --r-xl:   16px;
+  --r-full: 50px;  /* Paytm pill buttons */
 
-  /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
-  --shadow-md: 0 4px 16px rgba(0,0,0,.10), 0 2px 6px rgba(0,0,0,.06);
-  --shadow-lg: 0 10px 40px rgba(0,0,0,.15), 0 4px 12px rgba(0,0,0,.08);
-  --shadow-glow: 0 0 30px rgba(0,186,242,0.3);
+  /* Shadows — Paytm uses very subtle shadows */
+  --shadow-sm: 0 1px 4px rgba(0,0,0,0.08);
+  --shadow-md: 0 2px 12px rgba(0,0,0,0.10);
+  --shadow-lg: 0 4px 24px rgba(0,0,0,0.12);
 
   /* Transitions */
   --ease: cubic-bezier(.4,0,.2,1);
   --dur-fast: 150ms;
-  --dur-base: 250ms;
-  --dur-slow: 400ms;
+  --dur-base: 220ms;
+  --dur-slow: 350ms;
 }
 
 /* ── Reset & Base ──────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-html { font-size: 16px; -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
-
+html { font-size: 16px; -webkit-font-smoothing: antialiased; }
 body {
   font-family: var(--font-base);
-  background: var(--dash-bg);
-  color: var(--dash-text);
-  line-height: 1.6;
+  background: var(--paytm-bg);
+  color: var(--paytm-text);
+  line-height: 1.5;
   min-height: 100vh;
 }
-
 #root { min-height: 100vh; display: flex; flex-direction: column; }
 
 /* ── Typography ────────────────────────────────────────────── */
-h1, h2, h3, h4, h5, h6 { line-height: 1.3; font-weight: 700; }
-h1 { font-size: clamp(1.75rem, 4vw, 2.5rem); }
-h2 { font-size: clamp(1.4rem, 3vw, 2rem); }
-h3 { font-size: 1.25rem; }
-h4 { font-size: 1.1rem; }
-p  { color: var(--dash-text-2); }
-a  { color: var(--primary); text-decoration: none; }
+h1, h2, h3, h4, h5, h6 { line-height: 1.3; font-weight: 700; color: var(--paytm-text); }
+h1 { font-size: clamp(1.5rem, 3.5vw, 2.2rem); }
+h2 { font-size: clamp(1.25rem, 2.5vw, 1.75rem); }
+h3 { font-size: 1.2rem; }
+h4 { font-size: 1rem; }
+p  { color: var(--paytm-text-2); font-size: .9375rem; }
+a  { color: var(--paytm-cyan); text-decoration: none; }
+a:hover { text-decoration: underline; }
 
-/* ── Utility Classes ───────────────────────────────────────── */
+/* ── Utility ───────────────────────────────────────────────── */
 .flex         { display: flex; }
 .flex-col     { flex-direction: column; }
 .items-center { align-items: center; }
 .items-start  { align-items: flex-start; }
 .justify-between { justify-content: space-between; }
 .justify-center  { justify-content: center; }
-.gap-1 { gap: var(--sp-1); } .gap-2 { gap: var(--sp-2); }
-.gap-3 { gap: var(--sp-3); } .gap-4 { gap: var(--sp-4); }
-.gap-6 { gap: var(--sp-6); } .gap-8 { gap: var(--sp-8); }
+.gap-1 { gap: 4px; }  .gap-2 { gap: 8px; }
+.gap-3 { gap: 12px; } .gap-4 { gap: 16px; }
+.gap-6 { gap: 24px; } .gap-8 { gap: 32px; }
 .w-full { width: 100%; }
 .text-center { text-align: center; }
-.font-mono { font-family: var(--font-mono); }
-.text-sm { font-size: .875rem; }
-.text-xs { font-size: .75rem; }
-.text-lg { font-size: 1.125rem; }
-.text-xl { font-size: 1.25rem; }
-.text-2xl { font-size: 1.5rem; }
-.text-3xl { font-size: 1.875rem; }
+.font-mono  { font-family: var(--font-mono); }
+.text-xs    { font-size: .75rem; }
+.text-sm    { font-size: .875rem; }
+.text-lg    { font-size: 1.125rem; }
+.text-xl    { font-size: 1.25rem; }
+.text-2xl   { font-size: 1.5rem; }
+.text-3xl   { font-size: 1.875rem; }
+.font-medium   { font-weight: 500; }
 .font-semibold { font-weight: 600; }
-.font-bold { font-weight: 700; }
-.opacity-60 { opacity: 0.6; }
+.font-bold     { font-weight: 700; }
+.opacity-60    { opacity: 0.6; }
 
 /* ── Grid ──────────────────────────────────────────────────── */
-.grid-2 { display: grid; grid-template-columns: repeat(2,1fr); gap: var(--sp-4); }
-.grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: var(--sp-4); }
-.grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: var(--sp-4); }
+.grid-2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 20px; }
 @media(max-width:1024px) {
   .grid-4 { grid-template-columns: repeat(2,1fr); }
   .grid-3 { grid-template-columns: repeat(2,1fr); }
@@ -137,229 +154,397 @@ a  { color: var(--primary); text-decoration: none; }
   .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; }
 }
 
-/* ── Button System ─────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   PAYTM BUTTON SYSTEM
+   Primary (cyan filled), Outlined, Sign-In (navy pill)
+   ═══════════════════════════════════════════════════════════ */
 .btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-2);
-  padding: 10px 20px; border-radius: var(--r-md); border: none;
-  font-family: var(--font-base); font-size: .9rem; font-weight: 600;
-  cursor: pointer; transition: all var(--dur-base) var(--ease);
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border: none; cursor: pointer; font-family: var(--font-base);
+  font-weight: 600; font-size: .9375rem;
+  transition: all var(--dur-base) var(--ease);
   white-space: nowrap; user-select: none;
+  text-align: center;
 }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn:not(:disabled):active { opacity: 0.88; transform: scale(0.99); }
+
+/* Paytm primary = cyan, square-ish with 8px radius (like "Proceed to Recharge") */
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-  color: #fff; box-shadow: 0 4px 15px rgba(0,186,242,0.35);
+  background: var(--paytm-cyan);
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: var(--r-md);
+  letter-spacing: .01em;
 }
-.btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,186,242,0.45); }
-.btn-primary:active:not(:disabled) { transform: translateY(0); }
+.btn-primary:hover:not(:disabled) { background: var(--paytm-cyan-dark); }
+
+/* Full-width primary (like the Paytm form button) */
+.btn-primary-full {
+  background: var(--paytm-cyan);
+  color: #fff; width: 100%;
+  padding: 13px 20px;
+  border-radius: var(--r-md);
+  font-size: 1rem; font-weight: 600;
+}
+.btn-primary-full:hover:not(:disabled) { background: var(--paytm-cyan-dark); }
+
+/* Paytm "Sign In" style = dark navy pill */
 .btn-paytm {
-  background: linear-gradient(135deg, var(--paytm-blue) 0%, #003a99 100%);
-  color: #fff; box-shadow: 0 4px 15px rgba(0,41,112,0.35);
+  background: var(--paytm-navy);
+  color: #fff;
+  padding: 10px 28px;
+  border-radius: var(--r-full);
+  font-size: .9rem;
 }
-.btn-paytm:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,41,112,0.45); }
+.btn-paytm:hover:not(:disabled) { background: var(--paytm-navy-hover); }
+
+/* Paytm "Download App" style = outlined navy pill */
+.btn-outline {
+  background: transparent;
+  color: var(--paytm-navy);
+  border: 1.5px solid var(--paytm-navy);
+  padding: 9px 24px;
+  border-radius: var(--r-full);
+  font-size: .9rem;
+}
+.btn-outline:hover:not(:disabled) { background: var(--paytm-navy-light); }
+
+/* Ghost (used in dashboard refresh, etc.) */
 .btn-ghost {
-  background: transparent; color: var(--dash-text-2); border: 1.5px solid var(--dash-border);
+  background: transparent;
+  color: var(--paytm-text-2);
+  border: 1px solid var(--paytm-border);
+  padding: 8px 16px;
+  border-radius: var(--r-md);
+  font-size: .875rem;
 }
-.btn-ghost:hover:not(:disabled) { background: var(--dash-surface-2); color: var(--dash-text); }
-.btn-danger { background: var(--danger); color: #fff; }
-.btn-success { background: var(--success); color: #fff; }
-.btn-sm { padding: 6px 14px; font-size: .8rem; }
+.btn-ghost:hover:not(:disabled) { background: var(--paytm-bg); color: var(--paytm-text); }
+
+.btn-danger  { background: var(--danger);  color: #fff; padding: 10px 20px; border-radius: var(--r-md); }
+.btn-success { background: var(--success); color: #fff; padding: 10px 20px; border-radius: var(--r-md); }
+.btn-sm { padding: 7px 16px; font-size: .8125rem; }
 .btn-lg { padding: 14px 28px; font-size: 1rem; }
-.btn-xl { padding: 18px 36px; font-size: 1.1rem; }
-.btn-icon { width: 40px; height: 40px; padding: 0; border-radius: var(--r-md); }
 
-/* ── Card System ───────────────────────────────────────────── */
-.card {
-  background: var(--dash-surface);
-  border: 1px solid var(--dash-border);
-  border-radius: var(--r-lg);
-  padding: var(--sp-6);
-  box-shadow: var(--shadow-sm);
-}
-.card-hover { transition: all var(--dur-base) var(--ease); cursor: pointer; }
-.card-hover:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
-.card-sm { padding: var(--sp-4); border-radius: var(--r-md); }
-.card-glass {
-  background: rgba(255,255,255,0.08);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: var(--r-lg);
-}
-
-/* ── Badge ─────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   PAYTM BADGE SYSTEM
+   ═══════════════════════════════════════════════════════════ */
 .badge {
   display: inline-flex; align-items: center; gap: 4px;
-  padding: 3px 10px; border-radius: var(--r-full);
-  font-size: .72rem; font-weight: 600; letter-spacing: .03em; text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: var(--r-full);
+  font-size: .72rem; font-weight: 700;
+  letter-spacing: .03em; white-space: nowrap;
 }
-.badge-green  { background: var(--success-bg); color: #065f46; }
-.badge-red    { background: var(--danger-bg);  color: #7f1d1d; }
-.badge-yellow { background: var(--warning-bg); color: #78350f; }
-.badge-blue   { background: var(--primary-light); color: #0e4f6b; }
-.badge-purple { background: var(--info-bg); color: #3730a3; }
-.badge-gray   { background: var(--dash-surface-2); color: var(--dash-text-2); }
+.badge-blue   { background: var(--paytm-navy-light); color: var(--paytm-navy); }
+.badge-cyan   { background: var(--paytm-cyan-light); color: #0073a8; }
+.badge-green  { background: var(--success-bg); color: #0a7242; }
+.badge-yellow { background: var(--warning-bg); color: #a16207; }
+.badge-red    { background: var(--danger-bg);  color: #b91c1c; }
+.badge-gray   { background: #F0F2F5; color: #6B7280; }
+.badge-navy   { background: var(--paytm-navy); color: #fff; }
 
-/* ── Input ─────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   PAYTM INPUT SYSTEM
+   Clean rectangular inputs like paytm.com recharge form
+   ═══════════════════════════════════════════════════════════ */
 .input {
-  width: 100%; padding: 10px 14px;
-  border: 1.5px solid var(--dash-border); border-radius: var(--r-md);
-  font-family: var(--font-base); font-size: .9rem; color: var(--dash-text);
-  background: var(--dash-surface); outline: none;
-  transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+  width: 100%;
+  padding: 13px 16px;
+  background: #fff;
+  border: 1px solid var(--paytm-border);
+  border-radius: var(--r-md);
+  font-family: var(--font-base);
+  font-size: .9375rem;
+  color: var(--paytm-text);
+  outline: none;
+  transition: border-color var(--dur-fast) var(--ease);
 }
-.input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,186,242,0.15); }
-.input::placeholder { color: var(--dash-text-3); }
+.input::placeholder { color: var(--paytm-text-3); }
+.input:focus {
+  border-color: var(--paytm-cyan);
+  box-shadow: 0 0 0 3px rgba(0,186,242,0.10);
+}
 
-/* ── Scrollbar ─────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--dash-border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--dash-text-3); }
+/* ═══════════════════════════════════════════════════════════
+   PAYTM CARD SYSTEM
+   White, subtle shadow, 8-12px radius — no bold borders
+   ═══════════════════════════════════════════════════════════ */
+.card {
+  background: #fff;
+  border-radius: var(--r-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--paytm-border-light);
+}
+.card-hover { transition: box-shadow var(--dur-base) var(--ease); }
+.card-hover:hover { box-shadow: var(--shadow-md); }
 
-/* ── Loading Skeleton ──────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   SKELETON LOADING
+   ═══════════════════════════════════════════════════════════ */
 .skeleton {
-  background: linear-gradient(90deg, var(--dash-surface-2) 25%, var(--dash-border) 50%, var(--dash-surface-2) 75%);
-  background-size: 200% 100%;
-  animation: skeleton-wave 1.5s infinite;
+  background: linear-gradient(90deg, #F0F2F5 25%, #E4E7EB 50%, #F0F2F5 75%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
   border-radius: var(--r-md);
 }
-@keyframes skeleton-wave { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+@keyframes shimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
 
-/* ── Page transition ───────────────────────────────────────── */
-.page-enter { animation: fadeSlideUp var(--dur-slow) var(--ease) both; }
+/* ═══════════════════════════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════════════════════════ */
 @keyframes fadeSlideUp {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
-/* ── Pulse animation ───────────────────────────────────────── */
-@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
-.animate-pulse { animation: pulse 2s ease-in-out infinite; }
-
-/* ── Spin animation ────────────────────────────────────────── */
-@keyframes spin { to { transform: rotate(360deg); } }
-.animate-spin { animation: spin 1s linear infinite; }
-
-/* ── Ping animation ────────────────────────────────────────── */
-@keyframes ping { 75%,100% { transform: scale(2); opacity: 0; } }
-
-/* ── Device-specific global overrides ─────────────────────── */
-.device-root { background: var(--device-bg); color: var(--device-text); }
-
-/* ── Staggered card entrance ───────────────────────────────── */
-.grid-4 > *, .grid-3 > *, .grid-2 > * {
-  animation: fadeSlideUp var(--dur-slow) var(--ease) both;
+@keyframes fadeIn {
+  from { opacity: 0; } to { opacity: 1; }
 }
-.grid-4 > *:nth-child(1), .grid-3 > *:nth-child(1), .grid-2 > *:nth-child(1) { animation-delay: 0ms; }
-.grid-4 > *:nth-child(2), .grid-3 > *:nth-child(2), .grid-2 > *:nth-child(2) { animation-delay: 80ms; }
-.grid-4 > *:nth-child(3), .grid-3 > *:nth-child(3)                           { animation-delay: 160ms; }
-.grid-4 > *:nth-child(4)                                                       { animation-delay: 240ms; }
-
-/* ── Glow on device QR box ─────────────────────────────────── */
-.device-qr-box {
-  animation: qr-pulse 4s ease-in-out infinite alternate;
+@keyframes spin {
+  from { transform: rotate(0deg); } to { transform: rotate(360deg); }
 }
-@keyframes qr-pulse {
-  from { box-shadow: 0 0 20px rgba(0,186,242,0.15); }
-  to   { box-shadow: 0 0 50px rgba(0,186,242,0.35); }
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: .4; }
+}
+@keyframes ping {
+  0%   { transform: scale(1); opacity: 0.5; }
+  100% { transform: scale(1.8); opacity: 0; }
 }
 
-/* ── Confetti burst on payment success ─────────────────────── */
-@keyframes confetti-fall {
-  0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
-  100% { transform: translateY(60px) rotate(360deg); opacity: 0; }
-}
-.confetti-piece {
-  position: absolute;
-  width: 8px; height: 8px;
-  border-radius: 2px;
-  animation: confetti-fall 1s ease-out both;
-}
+.page-enter { animation: fadeSlideUp .3s var(--ease) both; }
+.animate-pulse { animation: pulse 1.5s ease-in-out infinite; }
 
-/* ── Floating badge notification ───────────────────────────── */
-@keyframes float-in {
-  from { transform: translateY(12px) scale(0.9); opacity: 0; }
-  to   { transform: translateY(0) scale(1); opacity: 1; }
+/* ═══════════════════════════════════════════════════════════
+   STAT CARD (Dashboard overview)
+   White card, exact Paytm metric card style
+   ═══════════════════════════════════════════════════════════ */
+.stat-card {
+  background: #fff;
+  border: 1px solid var(--paytm-border-light);
+  border-radius: var(--r-lg);
+  padding: 20px;
+  display: flex; flex-direction: column; gap: 12px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--dur-base) var(--ease);
 }
-.float-in { animation: float-in 0.4s cubic-bezier(0.34,1.56,0.64,1) both; }
-
-/* ── Chart tooltip enhancement ─────────────────────────────── */
-.recharts-tooltip-wrapper { filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15)); }
-
-/* ── Sidebar nav hover glow ────────────────────────────────── */
-.merchant-nav-item.active {
-  box-shadow: inset 0 0 20px rgba(0,186,242,0.08);
+.stat-card:hover { box-shadow: var(--shadow-md); }
+.stat-card-header { display: flex; align-items: center; justify-content: space-between; }
+.stat-card-label {
+  font-size: .72rem; font-weight: 700;
+  color: var(--paytm-text-3);
+  text-transform: uppercase; letter-spacing: .07em;
 }
-
-/* ── Button micro-interaction ──────────────────────────────── */
-.btn:not(:disabled):active { transform: scale(0.97); }
-
-/* ── Input focus glow ──────────────────────────────────────── */
-.input:focus {
-  box-shadow: 0 0 0 3px rgba(0,186,242,0.15), 0 1px 3px rgba(0,0,0,0.08);
+.stat-card-icon {
+  width: 38px; height: 38px;
+  border-radius: var(--r-md);
+  display: flex; align-items: center; justify-content: center;
 }
+.stat-card-value { font-size: 1.875rem; font-weight: 700; color: var(--paytm-text); line-height: 1; }
+.stat-card-trend { display: flex; align-items: center; gap: 4px; font-size: .8rem; font-weight: 600; }
+.stat-card-trend.up   { color: var(--success); }
+.stat-card-trend.down { color: var(--danger); }
 
-/* ── Status dot live pulse ─────────────────────────────────── */
-.device-status-dot {
-  position: relative;
+/* ═══════════════════════════════════════════════════════════
+   SECTION CARD — Paytm "white card on grey bg" pattern
+   ═══════════════════════════════════════════════════════════ */
+.section-card {
+  background: #fff;
+  border: 1px solid var(--paytm-border-light);
+  border-radius: var(--r-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 20px;
 }
-.device-status-dot::after {
-  content: '';
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  background: var(--success);
-  opacity: 0.4;
-  animation: ping 2s ease-out infinite;
-}
+.section-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.section-card-title { font-size: 1rem; font-weight: 700; color: var(--paytm-text); }
 
-/* ── Scrollbar for merchant main ───────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   INSIGHT CARD
+   ═══════════════════════════════════════════════════════════ */
+.insight-card {
+  background: #fff;
+  border: 1px solid var(--paytm-border-light);
+  border-radius: var(--r-lg);
+  padding: 20px;
+  display: flex; flex-direction: column; gap: 12px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--dur-base) var(--ease);
+}
+.insight-card:hover { box-shadow: var(--shadow-md); }
+.insight-card-type  { font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.insight-card-title { font-size: .95rem; font-weight: 700; color: var(--paytm-text); }
+.insight-card-body  { font-size: .875rem; color: var(--paytm-text-2); line-height: 1.6; }
+.insight-card-action { margin-top: auto; }
+
+/* ═══════════════════════════════════════════════════════════
+   DATA TABLE — Paytm-style clean table
+   ═══════════════════════════════════════════════════════════ */
+.data-table-wrapper {
+  background: #fff;
+  border: 1px solid var(--paytm-border-light);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 20px;
+}
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+  text-align: left; font-size: .72rem; font-weight: 700;
+  color: var(--paytm-text-2);
+  text-transform: uppercase; letter-spacing: .07em;
+  padding: 12px 16px;
+  background: var(--paytm-bg);
+  border-bottom: 1px solid var(--paytm-border);
+}
+.data-table td {
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--paytm-border-light);
+  font-size: .875rem; color: var(--paytm-text);
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: #F8FAFC; }
+
+/* ═══════════════════════════════════════════════════════════
+   PAGE HEADER — Paytm "Good morning" dashboard header style
+   ═══════════════════════════════════════════════════════════ */
+.page-header { margin-bottom: 24px; }
+.page-header h1 { font-size: 1.5rem; font-weight: 700; color: var(--paytm-text); }
+.page-header p   { color: var(--paytm-text-2); margin-top: 4px; font-size: .875rem; }
+
+/* ═══════════════════════════════════════════════════════════
+   PROGRESS BAR
+   ═══════════════════════════════════════════════════════════ */
+.progress-bar { height: 8px; background: var(--paytm-bg); border-radius: 4px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 4px; transition: width 1s var(--ease); }
+
+/* ═══════════════════════════════════════════════════════════
+   ASK AI — Chat interface
+   ═══════════════════════════════════════════════════════════ */
+.askai-root { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+.askai-hero { text-align: center; padding: 40px 20px 24px; }
+.askai-icon {
+  width: 72px; height: 72px;
+  background: linear-gradient(135deg, var(--paytm-navy) 0%, var(--paytm-cyan) 100%);
+  border-radius: 50%; margin: 0 auto 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.75rem;
+  box-shadow: 0 8px 32px rgba(0,41,112,0.20);
+}
+.askai-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 16px; }
+.askai-chip {
+  padding: 7px 16px; border-radius: var(--r-full);
+  background: #fff; border: 1.5px solid var(--paytm-border);
+  font-size: .8125rem; color: var(--paytm-text); font-weight: 500;
+  cursor: pointer; transition: all var(--dur-fast) var(--ease);
+}
+.askai-chip:hover { border-color: var(--paytm-cyan); color: var(--paytm-navy); background: var(--paytm-cyan-light); }
+.askai-messages { flex: 1; overflow-y: auto; padding: 0 32px 16px; display: flex; flex-direction: column; gap: 16px; }
+.askai-msg { display: flex; gap: 10px; max-width: 78%; }
+.askai-msg.user { align-self: flex-end; flex-direction: row-reverse; }
+.askai-msg-bubble { padding: 12px 16px; border-radius: 12px; font-size: .875rem; line-height: 1.6; }
+.askai-msg.user .askai-msg-bubble { background: var(--paytm-navy); color: #fff; border-bottom-right-radius: 3px; }
+.askai-msg.ai  .askai-msg-bubble { background: #fff; border: 1px solid var(--paytm-border); color: var(--paytm-text); border-bottom-left-radius: 3px; }
+.askai-avatar { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: .78rem; font-weight: 700; }
+.askai-msg.user .askai-avatar { background: var(--paytm-navy); color: #fff; }
+.askai-msg.ai  .askai-avatar  { background: linear-gradient(135deg, var(--paytm-navy), var(--paytm-cyan)); color: #fff; }
+.askai-input-bar { padding: 12px 24px; border-top: 1px solid var(--paytm-border); display: flex; gap: 10px; align-items: center; background: #fff; }
+.askai-input { flex: 1; }
+
+/* ═══════════════════════════════════════════════════════════
+   RISK INDICATORS
+   ═══════════════════════════════════════════════════════════ */
+.risk-badge-high   { background: var(--danger-bg);  color: #9B1C1C; }
+.risk-badge-medium { background: var(--warning-bg); color: #92400E; }
+.risk-badge-low    { background: var(--success-bg); color: #065F46; }
+
+/* ═══════════════════════════════════════════════════════════
+   DEVICE ROOT (Soundbox mode)
+   ═══════════════════════════════════════════════════════════ */
+.device-root { background: var(--device-bg); color: #fff; }
+
+/* ═══════════════════════════════════════════════════════════
+   RECHARTS CUSTOMISATION
+   ═══════════════════════════════════════════════════════════ */
+.recharts-tooltip-wrapper { filter: drop-shadow(0 2px 8px rgba(0,0,0,0.12)); }
+
+/* ═══════════════════════════════════════════════════════════
+   STAGGERED CARD ENTRANCE
+   ═══════════════════════════════════════════════════════════ */
+.grid-4 > *, .grid-3 > *, .grid-2 > * { animation: fadeSlideUp .3s var(--ease) both; }
+.grid-4 > *:nth-child(1), .grid-3 > *:nth-child(1) { animation-delay: 0ms; }
+.grid-4 > *:nth-child(2), .grid-3 > *:nth-child(2) { animation-delay: 60ms; }
+.grid-4 > *:nth-child(3), .grid-3 > *:nth-child(3) { animation-delay: 120ms; }
+.grid-4 > *:nth-child(4)                             { animation-delay: 180ms; }
+.data-table tbody tr { animation: fadeSlideUp .25s var(--ease) both; }
+.data-table tbody tr:nth-child(n) { animation-delay: calc(n * 30ms); }
+
+/* ═══════════════════════════════════════════════════════════
+   SCROLLBAR
+   ═══════════════════════════════════════════════════════════ */
 .merchant-main::-webkit-scrollbar { width: 4px; }
-.merchant-main::-webkit-scrollbar-thumb { background: var(--dash-border); border-radius: 4px; }
+.merchant-main::-webkit-scrollbar-thumb { background: var(--paytm-border); border-radius: 4px; }
 
-/* ── Toast notification (for copy, save, etc.) ─────────────── */
+/* ═══════════════════════════════════════════════════════════
+   FLOAT-IN / TOAST
+   ═══════════════════════════════════════════════════════════ */
+@keyframes float-in {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+.float-in { animation: float-in .3s var(--ease) both; }
 .toast {
   position: fixed; bottom: 24px; right: 24px; z-index: 9999;
-  padding: 12px 20px;
-  background: var(--dash-text);
-  color: var(--dash-bg);
-  border-radius: var(--r-lg);
-  font-size: .875rem; font-weight: 600;
-  box-shadow: var(--shadow-lg);
-  animation: float-in 0.3s cubic-bezier(0.34,1.56,0.64,1) both;
+  padding: 12px 20px; background: var(--paytm-navy); color: #fff;
+  border-radius: var(--r-lg); font-size: .875rem; font-weight: 600;
+  box-shadow: var(--shadow-lg); animation: float-in .3s var(--ease) both;
 }
 
-/* ── Device background ambient glow ────────────────────────── */
-.device-root::before {
-  content: '';
-  position: fixed;
-  width: 300px; height: 300px;
-  background: radial-gradient(circle, rgba(0,186,242,0.12) 0%, transparent 70%);
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  animation: blob-float 6s ease-in-out infinite alternate;
+/* ═══════════════════════════════════════════════════════════
+   BUTTON MICRO-INTERACTION
+   ═══════════════════════════════════════════════════════════ */
+.btn:not(:disabled):active { transform: scale(0.98); }
+
+/* ═══════════════════════════════════════════════════════════
+   QR PULSE
+   ═══════════════════════════════════════════════════════════ */
+.device-qr-box { animation: qr-pulse 4s ease-in-out infinite alternate; }
+@keyframes qr-pulse {
+  from { box-shadow: 0 0 16px rgba(0,186,242,0.15); }
+  to   { box-shadow: 0 0 40px rgba(0,186,242,0.40); }
 }
 
-/* ── Table row entrance ────────────────────────────────────── */
-.data-table tbody tr {
-  animation: fadeSlideUp 0.3s var(--ease) both;
+/* ═══════════════════════════════════════════════════════════
+   PAYTM NAVY SECTION HEADER (like the service icon strip)
+   Used on landing and in dashboard
+   ═══════════════════════════════════════════════════════════ */
+.paytm-navy-section {
+  background: var(--paytm-navy);
+  color: #fff;
+  padding: 24px 32px;
 }
-.data-table tbody tr:nth-child(1) { animation-delay: 0ms; }
-.data-table tbody tr:nth-child(2) { animation-delay: 40ms; }
-.data-table tbody tr:nth-child(3) { animation-delay: 80ms; }
-.data-table tbody tr:nth-child(4) { animation-delay: 120ms; }
-.data-table tbody tr:nth-child(5) { animation-delay: 160ms; }
-.data-table tbody tr:nth-child(6) { animation-delay: 200ms; }
-.data-table tbody tr:nth-child(7) { animation-delay: 240ms; }
-.data-table tbody tr:nth-child(8) { animation-delay: 280ms; }
-
-/* ── Landing page particle dots ────────────────────────────── */
-.landing-root::after {
-  content: '';
-  position: fixed; inset: 0;
-  background-image: radial-gradient(1.5px 1.5px at calc(var(--x,50%)) calc(var(--y,50%)), rgba(0,186,242,0.4) 0%, transparent 100%);
-  pointer-events: none;
-  opacity: 0.6;
+.paytm-service-grid {
+  display: flex; flex-wrap: wrap;
+  gap: 0;
 }
-
+.paytm-service-item {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 8px; padding: 16px 20px; cursor: pointer;
+  border-radius: var(--r-md);
+  transition: background var(--dur-fast) var(--ease);
+  min-width: 90px;
+}
+.paytm-service-item:hover { background: rgba(255,255,255,0.10); }
+.paytm-service-icon {
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; opacity: 0.9;
+}
+.paytm-service-label {
+  font-size: .72rem; color: rgba(255,255,255,0.88);
+  text-align: center; line-height: 1.35; font-weight: 500;
+}

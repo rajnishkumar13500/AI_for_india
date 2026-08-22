@@ -203,22 +203,27 @@ export default function DeviceHome() {
 
   if (deviceState === STATE.IDLE) return (
     <div className="device-home">
+      {/* Paytm Brand */}
       <div className="device-brand">
-        <div className="device-brand-name">Paytm Vyapar AI</div>
-        <div className="device-brand-sub">Commerce Intelligence</div>
+        <div className="device-brand-logo">
+          <span className="device-brand-p">p</span>
+          <span className="device-brand-aytm">aytm</span>
+        </div>
+        <div className="device-brand-sub">Soundbox · Vyapar AI</div>
       </div>
 
+      {/* QR Code */}
       <div>
         <div className="device-qr-box">
           <QRCodeSVG
             value={`paytm://merchant/${MERCHANT_ID}/pay`}
-            size={180}
+            size={175}
             bgColor="#ffffff"
             fgColor="#002970"
             level="M"
           />
         </div>
-        <div className="device-qr-label">SCAN TO PAY • M001</div>
+        <div className="device-qr-label">SCAN &amp; PAY · MERCHANT ID: M001</div>
       </div>
 
       <div className="device-status-strip">
@@ -226,7 +231,11 @@ export default function DeviceHome() {
         <span>READY FOR PAYMENT</span>
       </div>
 
-      {error && <div style={{ color: 'var(--danger)', fontSize: '.78rem', textAlign: 'center', padding: '8px', background: 'rgba(239,68,68,.1)', borderRadius: 'var(--r-md)', width: '100%' }}>{error}</div>}
+      {error && (
+        <div style={{ color: 'var(--paytm-cyan)', fontSize: '.78rem', textAlign: 'center', padding: '10px 14px', background: 'rgba(0,186,242,.08)', borderRadius: 'var(--r-md)', width: '100%', border: '1px solid rgba(0,186,242,.2)' }}>
+          ⚠️ {error}
+        </div>
+      )}
 
       <div className="device-actions">
         <button className="device-btn-txn" onClick={handleStartTransaction} id="btn-start-transaction">
@@ -237,7 +246,7 @@ export default function DeviceHome() {
           🎬 Demo Mode
         </button>
         <button className="device-btn-demo" onClick={() => nav('/dashboard')} id="btn-open-dashboard" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-          <BarChart3 size={15} /> Open Dashboard
+          <BarChart3 size={15} /> Paytm for Business
         </button>
       </div>
     </div>
