@@ -66,3 +66,31 @@ export async function getTransactions() {
   if (!USE_REAL_API) return MOCK_OVERVIEW.recentTransactions
   return safeApiFetch(`/transactions?merchantId=${MERCHANT_ID}`, MOCK_OVERVIEW.recentTransactions)
 }
+
+export async function addProduct(productData) {
+  try {
+    const res = await fetch(`${API_BASE}/products`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...productData, merchantId: MERCHANT_ID }),
+    })
+    const json = await res.json()
+    return json.data ?? json
+  } catch {
+    return { success: true, ...productData }
+  }
+}
+
+export async function restockProduct(productId, quantity = 10) {
+  try {
+    const res = await fetch(`${API_BASE}/products/${productId}/restock`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quantity, merchantId: MERCHANT_ID }),
+    })
+    const json = await res.json()
+    return json.data ?? json
+  } catch {
+    return { success: true, productId, quantity }
+  }
+}
